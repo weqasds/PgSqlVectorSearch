@@ -160,5 +160,27 @@ public class RagDbContext : DbContext
         });
         base.OnModelCreating(modelBuilder);
     }
+    public override int SaveChanges()
+    {
+        var now = DateTime.UtcNow;
+        foreach (var entry in ChangeTracker.Entries<Entity<Guid>>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.CreatedAt = now;
+                entry.Entity.ModifiedAt = now;
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.ModifiedAt = now;
+            }
+            else if (entry.State == EntityState.Deleted)
+            {
+                entry.Entity.IsDeleted = true;
+                entry.Entity.ModifiedAt = now;
+            }
+        }
+        return base.SaveChanges();
+    }
 
 }

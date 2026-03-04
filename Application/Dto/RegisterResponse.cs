@@ -2,5 +2,6 @@ namespace Application.Dto;
 
 public class RegisterResponse
 {
-    public UserDto User { get; set; } = new UserDto();
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
 }
