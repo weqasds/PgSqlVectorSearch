@@ -1,5 +1,35 @@
-.vs
-PgSqlVectorSearch/bin
+# IDE and editor files
+.vs/
+*.user
+*.suo
+*.userosscache
 
-PgSqlVectorSearch/obj
-PgSqlVectorSearch/appsettings.Development.json
+# Build outputs
+**/bin/
+**/obj/
+
+# .NET Core specific
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# Frontend dependencies
+fronted/node_modules/
+fronted/dist/
+fronted/.env
+fronted/.env.local
+
+# Database files
+*.db
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Temp files
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+Thumbs.db

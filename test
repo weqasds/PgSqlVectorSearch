@@ -1,0 +1,8 @@
+dotnet ef migrations add InitialRagSchema --connection "Host=localhost;Database=ragdb;Username=postgres;Password=@qq13015461197"
+
+pg_upgrade -b "E:\PostgreSQL\17\bin" -B "E:\PostgreSQL\18\bin" -d "E:\PostgreSQL\17\data" -D "E:\PostgreSQL\18\Data" -p 5432 -P 5433 -U postgres
+"E:\PostgreSQL\18\bin\pg_ctl.exe" runservice -N "postgresql-x64-18" -D "E:\PostgreSQL\18\data" -w
+"E:\PostgreSQL\17\bin\pg_ctl.exe" runservice -N "postgresql-x64-17" -D "E:\PostgreSQL\17\data" -w
+E:\PostgreSQL\17\bin\pgagent.exe RUN pgagent-pg17 host=localhost port=5432 user=postgres dbname=postgres
+E:\PostgreSQL\18\bin\pgagent.exe RUN pgagent-pg18 host=localhost port=5433 user=postgres dbname=postgres
+.\pgagent.exe INSTALL pgAgent -u postgres -p 5432 -d postgres -h localhost
