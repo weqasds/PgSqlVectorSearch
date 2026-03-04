@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "mxLk6HObf5s=",
+  "dgSpecHash": "ACPkpQWJgEU=",
   "success": true,
   "projectFilePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
   "expectedPackageFiles": [
@@ -28,6 +28,8 @@
     "D:\\source\\packages\\npgsql\\10.0.0\\npgsql.10.0.0.nupkg.sha512",
     "D:\\source\\packages\\npgsql.entityframeworkcore.postgresql\\10.0.0\\npgsql.entityframeworkcore.postgresql.10.0.0.nupkg.sha512",
     "D:\\source\\packages\\openai\\2.7.0\\openai.2.7.0.nupkg.sha512",
+    "D:\\source\\packages\\pgvector\\0.3.2\\pgvector.0.3.2.nupkg.sha512",
+    "D:\\source\\packages\\pgvector.entityframeworkcore\\0.3.0\\pgvector.entityframeworkcore.0.3.0.nupkg.sha512",
     "D:\\source\\packages\\system.clientmodel\\1.8.1\\system.clientmodel.1.8.1.nupkg.sha512",
     "D:\\source\\packages\\system.memory.data\\10.0.0\\system.memory.data.10.0.0.nupkg.sha512",
     "D:\\source\\packages\\system.numerics.tensors\\10.0.2\\system.numerics.tensors.10.0.2.nupkg.sha512"

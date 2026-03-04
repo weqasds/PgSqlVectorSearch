@@ -8,5 +8,5 @@ public interface ITaskQueueService
 {
     Task<string> EnqueueDocumentProcessingAsync(Guid documentId);
     Task<string> EnqueueVectorGenerationAsync(Guid chunkId);
-    Task<TaskStatus> GetTaskStatusAsync(string taskId);
+    Task<Entities.TaskStatus> GetTaskStatusAsync(string taskId);
 }

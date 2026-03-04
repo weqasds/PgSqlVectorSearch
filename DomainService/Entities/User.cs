@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DomainService.Entities;
 
-public class User : Entity<int>
+public class User : Entity<Guid>
 {
     public string UserName { get; set; }
     public string Email { get; set; }

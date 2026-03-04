@@ -11,5 +11,8 @@
     <Folder Include="ServiceContract\" />
     <Folder Include="Entities\" />
   </ItemGroup>
-  <PackageReference Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
+
+  <ItemGroup>
+    <PackageReference Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
+  </ItemGroup>
 </Project>

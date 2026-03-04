@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PgSqlVectorSearch")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cd68832a3f520580cabc6be63117294d01568744")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+78f9d2cb8cfe552572ff26424443edc5762b6379")]
 [assembly: System.Reflection.AssemblyProductAttribute("PgSqlVectorSearch")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PgSqlVectorSearch")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -8,7 +8,7 @@ namespace DomainService.Entities;
 /// </summary>
 public class ChatSession : Entity<Guid>
 {
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     public User User { get; set; } = null!;
     public string ChatTitle { get; set; } = null!;
     public ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();

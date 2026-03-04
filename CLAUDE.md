@@ -27,6 +27,7 @@ This is a RAG (Retrieval-Augmented Generation) system using PostgreSQL vector se
 cd fronted
 pnpm install          # Install dependencies
 pnpm dev             # Start development server
+pnpm preview         # Preview production build locally
 pnpm build           # Build for production
 pnpm type-check      # TypeScript type checking
 pnpm lint            # Run linters (oxlint + ESLint)
@@ -95,6 +96,7 @@ The solution follows strict dependency direction:
 - ✅ Domain entities defined
 - ✅ Database schema and migrations
 - ✅ Basic DbContext configuration
+- ✅ KnowledgeBaseController and IKnowledgeBaseAppService interface defined (implementation pending)
 - ⏳ Domain services (to be implemented in `DomainService/Services/`)
 - ⏳ Application services (to be implemented in `Application/ApplicationService/`)
 - ⏳ API controllers (partially implemented in `PgSqlVectorSearch/Controllers/`)
@@ -121,6 +123,7 @@ Services should be registered in `Program.cs` following the pattern in the archi
 - Tailwind CSS + DaisyUI for styling
 - Axios for API calls
 - API clients in `src/api/` (auth, chat) - needs backend integration
+- Uses mock API data in development (enabled via VITE_USE_MOCK_API environment variable)
 
 ## Development Notes
 

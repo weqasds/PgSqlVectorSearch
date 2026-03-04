@@ -1,3 +1,4 @@
+// eslint-disable-next-line vue/multi-word-component-names
 <template>
   <div class="min-h-screen flex items-center justify-center bg-base-100">
     <div class="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
@@ -5,9 +6,9 @@
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
           <label for="username" class="block text-sm font-medium mb-1">用户名</label>
-          <input 
-            type="text" 
-            id="username" 
+          <input
+            type="text"
+            id="username"
             v-model="form.username"
             class="w-full p-2 border border-base-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             required
@@ -15,23 +16,23 @@
         </div>
         <div>
           <label for="password" class="block text-sm font-medium mb-1">密码</label>
-          <input 
-            type="password" 
-            id="password" 
+          <input
+            type="password"
+            id="password"
             v-model="form.password"
             class="w-full p-2 border border-base-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             required
           />
         </div>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           class="w-full btn btn-primary"
           :disabled="isLoading"
         >
           {{ isLoading ? '登录中...' : '登录' }}
         </button>
-        <button 
-          type="button" 
+        <button
+          type="button"
           @click="handleDemoLogin"
           class="w-full btn btn-ghost"
         >
