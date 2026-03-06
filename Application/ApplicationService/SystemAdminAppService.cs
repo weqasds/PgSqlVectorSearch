@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DomainService.ServiceContract;
+using DomainService.ServiceContract.Services;
+using DomainService.ServiceContract.Repositories;
+using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 
 namespace Application.ApplicationService;
@@ -103,7 +105,7 @@ public class SystemAdminAppService : ISystemAdminAppService
             {
                 await _chatSessionRepository.DeleteMessageAsync(message.Id);
             }
-            await _chatSessionRepository.DeleteAsync(session.Id);
+            await _chatSessionRepository.DeleteAsync(session);
         }
 
         // Delete old RAG generation logs (if applicable)

@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs basename:*)"
+      "Bash(xargs basename:*)",
+      "Bash(dotnet build)",
+      "Bash(dotnet ef migrations add UpdateRelation)",
+      "Bash(dir \"EFCoreInfrastructure/Repository\" /b)",
+      "Bash(dotnet build EFCoreInfrastructure)",
+      "Bash(dotnet build DomainService/DomainService.csproj)",
+      "Bash(dotnet build Infrastructure/EFCoreInfrastructure/EFCoreInfrastructure.csproj)",
+      "Bash(dotnet build Application/Application.csproj)",
+      "Bash(dotnet build Application/ApplicationService.csproj)"
     ]
   }
 }

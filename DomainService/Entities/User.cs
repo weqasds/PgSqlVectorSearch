@@ -11,4 +11,9 @@ public class User : Entity<Guid>
     public string Email { get; set; }
     public string PasswordHash { get; set; }
     public ICollection<ChatSession> ChatSessions { get; set; } = new List<ChatSession>();
+
+    /// <summary>
+    /// 创建的知识关系
+    /// </summary>
+    public virtual ICollection<KnowledgeRelation>? CreatedRelations { get; set; }
 }

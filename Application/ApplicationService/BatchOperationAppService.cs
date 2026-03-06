@@ -4,7 +4,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using DomainService.ServiceContract;
+using DomainService.ServiceContract.Services;
+using DomainService.ServiceContract.Repositories;
+using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 
 namespace Application.ApplicationService;

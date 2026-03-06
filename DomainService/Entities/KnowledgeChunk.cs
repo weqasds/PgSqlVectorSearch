@@ -17,4 +17,14 @@ public class KnowledgeChunk : Entity<Guid>
 
     public int ChunkIndex { get; set; }
     public string Content { get; set; } = null!;
+
+    /// <summary>
+    /// 作为源的知识关系
+    /// </summary>
+    public virtual ICollection<KnowledgeRelation>? SourceRelations { get; set; }
+
+    /// <summary>
+    /// 作为目标的知识关系
+    /// </summary>
+    public virtual ICollection<KnowledgeRelation>? TargetRelations { get; set; }
 }

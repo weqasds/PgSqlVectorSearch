@@ -1,5 +1,15 @@
 @import 'tailwindcss';
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes:
+    light --default,
+    dark --prefersdark;
+}
+:root {
+  --font-size-base: 16px;
+  --message-spacing: 1rem;
+  font-size: var(--font-size-base);
+}
+
 body {
   font-family:
     'Inter',
@@ -33,4 +43,22 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
+}
+
+/* 消息密度样式 */
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--message-spacing, 1rem);
+}
+
+.message-item {
+  /* margin-bottom is now handled by gap in parent */
+}
+
+/* 消息时间戳样式 */
+.message-timestamp {
+  font-size: calc(var(--font-size-base, 16px) * 0.75);
+  opacity: 0.7;
+  margin-top: 0.25rem;
 }

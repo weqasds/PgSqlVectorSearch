@@ -29,10 +29,12 @@ export const useSettingsStore = defineStore('settings', {
     },
     updateFontSize(fontSize: FontSize) {
       this.fontSize = fontSize;
+      this.applyFontSize();
       this.saveSettings();
     },
     updateMessageDensity(density: MessageDensity) {
       this.messageDensity = density;
+      this.applyMessageDensity();
       this.saveSettings();
     },
     applyTheme() {
@@ -40,14 +42,33 @@ export const useSettingsStore = defineStore('settings', {
       if (themeToApply === 'system') {
         themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
-      document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(themeToApply);
+      document.documentElement.setAttribute('data-theme', themeToApply);
+    },
+    applyFontSize() {
+      const html = document.documentElement;
+      const fontSizeMap = {
+        small: '14px',
+        medium: '16px',
+        large: '18px'
+      };
+      html.style.setProperty('--font-size-base', fontSizeMap[this.fontSize]);
+    },
+    applyMessageDensity() {
+      const html = document.documentElement;
+      const densityMap = {
+        compact: '0.5rem',
+        comfortable: '1rem',
+        spacious: '1.5rem'
+      };
+      html.style.setProperty('--message-spacing', densityMap[this.messageDensity]);
     },
     saveSettings() {
       localStorage.setItem('settings', JSON.stringify(this.$state));
     },
     init() {
       this.applyTheme();
+      this.applyFontSize();
+      this.applyMessageDensity();
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if (this.theme === 'system') {
           this.applyTheme();

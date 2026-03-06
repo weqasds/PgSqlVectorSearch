@@ -1,12 +1,13 @@
 <template>
-  <div class="flex-1 overflow-y-auto p-4 space-y-4">
-    <div v-if="messages.length === 0" class="flex items-center justify-center h-full text-muted-foreground">
+  <div class="flex-1 overflow-y-auto p-4 message-list flex flex-col">
+    <div v-if="messages.length === 0" class="flex items-center justify-center h-full text-base-content/70">
       开始新的对话吧
     </div>
-    <MessageItem 
-      v-for="message in messages" 
+    <MessageItem
+      v-for="message in messages"
       :key="message.id"
       :message="message"
+      class="message-item"
     />
   </div>
 </template>

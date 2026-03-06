@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using DomainService.ServiceContract;
+using DomainService.ServiceContract.Services;
+using DomainService.ServiceContract.Repositories;
+using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 using Application.Dto;
 
@@ -81,7 +83,7 @@ public class AuthAppService : IAuthAppService
         // This method should identify the current user from context
         // For simplicity, we'll assume the request contains UserId
         // In real implementation, get userId from claims
-        var userId = request.UserId;
+        var userId = new Guid(); // Placeholder, replace with actual user ID retrieval logic
 
         await _authService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword);
     }

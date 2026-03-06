@@ -1,7 +1,7 @@
 // eslint-disable-next-line vue/multi-word-component-names
 <template>
   <div class="min-h-screen flex items-center justify-center bg-base-100">
-    <div class="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+    <div class="w-full max-w-md p-8 bg-base-100 rounded-lg shadow-md">
       <h1 class="text-2xl font-bold mb-6 text-center">登录</h1>
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>

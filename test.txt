@@ -1,0 +1,9 @@
+dotnet ef migrations add InitialRagSchema --connection "Host=localhost;Database=ragdb;Username=postgres;Password=@qq13015461197"
+
+pg_upgrade -b "E:\PostgreSQL\17\bin" -B "E:\PostgreSQL\18\bin" -d "E:\PostgreSQL\17\data" -D "E:\PostgreSQL\18\Data" -p 5432 -P 5433 -U postgres
+"E:\PostgreSQL\18\bin\pg_ctl.exe" runservice -N "postgresql-x64-18" -D "E:\PostgreSQL\18\data" -w
+"E:\PostgreSQL\17\bin\pg_ctl.exe" runservice -N "postgresql-x64-17" -D "E:\PostgreSQL\17\data" -w
+E:\PostgreSQL\17\bin\pgagent.exe RUN pgagent-pg17 host=localhost port=5432 user=postgres dbname=postgres
+E:\PostgreSQL\18\bin\pgagent.exe RUN pgagent-pg18 host=localhost port=5433 user=postgres dbname=postgres
+.\pgagent.exe INSTALL pgAgent -u postgres -p 5432 -d postgres -h localhost
+@DomainService/ServiceContract/IRepository.cs 这是仓储接口接口文件的定义， 请帮我完善仓储接口的接口声明，因为只有基础的CRUD，并且大多数是单个单个的进行处理，希望更加完善，另外对于此文件所在文件夹的其他文件请帮我整理并根据接口功能分类到不同文件夹中。并且我发现绝大多数的的

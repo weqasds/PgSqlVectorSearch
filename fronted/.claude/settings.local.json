@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx vue-tsc:*)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(pnpm type-check:*)",
+      "mcp__context7__query-docs"
     ]
   }
 }

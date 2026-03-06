@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DomainService.Entities;
-using DomainService.ServiceContract;
+using DomainService.ServiceContract.Services;
+using DomainService.ServiceContract.Repositories;
+using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 
 namespace Application.ApplicationService;
@@ -92,7 +94,7 @@ public class RagChatAppService : IRagChatAppService
         return new ChatHistoryDto
         {
             SessionId = sessionId,
-            Title = session.Title,
+            Title = session.ChatTitle,
             Messages = messages.Select(MapToMessageDto),
             CreatedAt = session.CreatedAt
         };
@@ -105,9 +107,9 @@ public class RagChatAppService : IRagChatAppService
         {
             Id = session.Id,
             UserId = session.UserId,
-            Title = session.Title,
+            Title = session.ChatTitle,
             CreatedAt = session.CreatedAt,
-            LastActivityAt = session.LastActivityAt,
+            LastActivityAt = session.ModifiedAt,
             MessageCount = 0
         };
     }

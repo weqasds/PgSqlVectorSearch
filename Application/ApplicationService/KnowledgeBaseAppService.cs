@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DomainService.Entities;
-using DomainService.ServiceContract;
+using DomainService.ServiceContract.Services;
+using DomainService.ServiceContract.Repositories;
+using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 
 namespace Application.ApplicationService;

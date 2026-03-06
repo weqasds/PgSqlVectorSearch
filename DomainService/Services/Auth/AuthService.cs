@@ -3,7 +3,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using DomainService.Entities;
-using DomainService.ServiceContract;
+using DomainService.ServiceContract.Services;
+using DomainService.ServiceContract.Repositories;
+using DomainService.ServiceContract.CrossCutting;
 
 namespace DomainService.Services.Auth;
 

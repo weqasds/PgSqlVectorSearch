@@ -2,5 +2,6 @@
   <Project Path="Application/ApplicationService.csproj" Id="d278ddd6-f70b-4546-9878-64561e349c04" />
   <Project Path="DataMigration/DataMigration.csproj" />
   <Project Path="DomainService/DomainService.csproj" Id="df583fa7-347b-4b32-b014-86359019a94d" />
+  <Project Path="Infrastructure/EFCoreInfrastructure/EFCoreInfrastructure.csproj" Id="8497fa43-28c4-4948-998c-20f7df9fb1cb" />
   <Project Path="PgSqlVectorSearch/PgSqlVectorSearch.csproj" />
 </Solution>

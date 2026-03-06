@@ -2,6 +2,7 @@
 using System;
 using DataMigration;
 using DomainService.Entities;
+using EFCoreInfrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;

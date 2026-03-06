@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using DomainService.ServiceContract;
+using DomainService.ServiceContract.Services;
+using DomainService.ServiceContract.Repositories;
+using DomainService.ServiceContract.CrossCutting;
 
 namespace DomainService.Services.Infrastructure;
 

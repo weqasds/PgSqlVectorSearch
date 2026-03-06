@@ -5,10 +5,10 @@
   >
     <div 
       class="max-w-[70%] p-3 rounded-lg" 
-      :class="message.role === 'user' ? 'bg-primary text-white' : 'bg-base-200'"
+      :class="message.role === 'user' ? 'bg-primary text-primary-content' : 'bg-base-200'"
     >
       <div v-html="renderedContent"></div>
-      <div class="text-xs mt-1 opacity-70">
+      <div class="message-timestamp">
         {{ formatTime(message.createdAt) }}
       </div>
     </div>

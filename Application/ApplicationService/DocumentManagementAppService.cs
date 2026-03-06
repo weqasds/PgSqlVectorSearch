@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DomainService.Entities;
-using DomainService.ServiceContract;
+using DomainService.ServiceContract.Services;
+using DomainService.ServiceContract.Repositories;
+using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 
 namespace Application.ApplicationService;
@@ -54,11 +56,11 @@ public class DocumentManagementAppService : IDocumentManagementAppService
         var chunks = await _knowledgeChunkRepository.GetByDocumentIdAsync(documentId);
         foreach (var chunk in chunks)
         {
-            await _knowledgeChunkRepository.DeleteAsync(chunk.Id);
+            await _knowledgeChunkRepository.DeleteAsync(chunk);
         }
 
         // Delete document
-        await _knowledgeDocumentRepository.DeleteAsync(documentId);
+        await _knowledgeDocumentRepository.DeleteAsync(document);
     }
 
     public async Task ReprocessDocumentAsync(Guid documentId)
@@ -83,9 +85,9 @@ public class DocumentManagementAppService : IDocumentManagementAppService
             FilePath = document.FilePath,
             FileSize = document.FileSize,
             ContentType = document.ContentType,
-            UploadedAt = document.UploadedAt,
+            UploadedAt = document.CreatedAt,
             Status = document.Status.ToString(),
-            ChunkCount = 0
+            ChunkCount = document.ChunkCount
         };
     }
 }
