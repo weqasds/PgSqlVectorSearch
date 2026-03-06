@@ -11,7 +11,7 @@
 # .NET Core specific
 **/appsettings.Development.json
 **/appsettings.Local.json
-
+备份文件/**
 # Frontend dependencies
 fronted/node_modules/
 fronted/dist/
