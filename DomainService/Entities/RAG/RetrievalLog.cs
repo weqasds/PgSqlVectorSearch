@@ -1,6 +1,6 @@
 using System;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.RAG;
 
 public class RetrievalLog
 {

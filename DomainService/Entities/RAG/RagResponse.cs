@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.RAG;
 
 public class RagResponse
 {

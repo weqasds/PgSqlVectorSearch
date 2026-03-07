@@ -1,4 +1,4 @@
-namespace DomainService.Entities;
+namespace DomainService.Entities.Enums;
 
 public enum TaskStatus
 {

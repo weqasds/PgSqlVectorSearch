@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using DomainService.Entities.Core;
+using DomainService.Entities.Chat;
+using DomainService.Entities.KnowledgeGraph;
+using DomainService.Entities.KnowledgeManagement;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.UserManagement;
 
 public class User : Entity<Guid>
 {
@@ -16,4 +20,9 @@ public class User : Entity<Guid>
     /// 创建的知识关系
     /// </summary>
     public virtual ICollection<KnowledgeRelation>? CreatedRelations { get; set; }
+
+    /// <summary>
+    /// 用户可访问的知识库权限关系
+    /// </summary>
+    public virtual ICollection<UserKnowledgeBase>? AccessibleKnowledgeBases { get; set; }
 }

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using DomainService.Entities.Core;
+using DomainService.Entities.Chat;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.RAG;
 
 public class RagGeneration : Entity<Guid>
 {

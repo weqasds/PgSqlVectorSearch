@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using DomainService.Entities.Core;
+using DomainService.Entities.KnowledgeGraph;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.KnowledgeManagement;
 
 /// <summary>
 /// RAG最小单位

@@ -1,6 +1,7 @@
 using System;
+using DomainService.Entities.Core;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.KnowledgeGraph;
 
 /// <summary>
 /// 图边实体

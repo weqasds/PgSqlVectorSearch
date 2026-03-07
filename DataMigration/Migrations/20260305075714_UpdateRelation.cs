@@ -1,5 +1,5 @@
 ﻿using System;
-using DomainService.Entities;
+using DomainService.Entities.Core;using DomainService.Entities.KnowledgeManagement;using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using DomainService.Entities.Core;
+using DomainService.Entities.KnowledgeManagement;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.VectorSearch;
 
 public class Embedding : Entity<Guid>
 {

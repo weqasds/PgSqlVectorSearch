@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.Core;
 
 public class Entity<Tkey>
 {

@@ -4,9 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
-using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 using Application.Dto;
+using DomainService.Entities.UserManagement;
+using DomainService.Entities.Chat;
 
 namespace Application.ApplicationService;
 
@@ -56,7 +57,7 @@ public class UserAppService : IUserAppService
         return sessions.Select(MapToSessionDto);
     }
 
-    private UserDto MapToDto(DomainService.Entities.User user)
+    private UserDto MapToDto(User user)
     {
         return new UserDto
         {
@@ -68,7 +69,7 @@ public class UserAppService : IUserAppService
         };
     }
 
-    private ChatSessionDto MapToSessionDto(DomainService.Entities.ChatSession session)
+    private ChatSessionDto MapToSessionDto(ChatSession session)
     {
         // MessageCount could be retrieved from repository; for simplicity we'll set to 0
         return new ChatSessionDto

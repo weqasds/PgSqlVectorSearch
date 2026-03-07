@@ -5,6 +5,7 @@ using DomainService.ServiceContract.Repositories;
 using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 using Application.Dto;
+using DomainService.Entities.UserManagement;
 
 namespace Application.ApplicationService;
 
@@ -88,7 +89,7 @@ public class AuthAppService : IAuthAppService
         await _authService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword);
     }
 
-    private string GenerateJwtToken(DomainService.Entities.User user)
+    private string GenerateJwtToken(DomainService.Entities.UserManagement.User user)
     {
         // Placeholder for JWT token generation
         // In a real implementation, use JWT library with secret key

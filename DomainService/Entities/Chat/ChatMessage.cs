@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-namespace DomainService.Entities;
+using DomainService.Entities.Core;
+
+namespace DomainService.Entities.Chat;
 /// <summary>
 /// 对话消息，包含用户输入和系统回复
 /// </summary>

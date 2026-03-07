@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using DomainService.Entities.Core;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.KnowledgeManagement;
 /// <summary>
 /// 知识文档实体，表示上传的文件元信息
 /// </summary>
@@ -37,6 +38,11 @@ public class KnowledgeDocument : Entity<Guid>
     /// 文档被切分成的块数量
     /// </summary>
     public int ChunkCount { get; set; }
+
+    /// <summary>
+    /// 文件哈希值，用于防止重复上传相同文件
+    /// </summary>
+    public string? FileHash { get; set; }
 
 }
 public enum DocumentStatus

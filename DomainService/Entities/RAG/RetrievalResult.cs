@@ -1,6 +1,7 @@
 using Pgvector;
+using DomainService.Entities.KnowledgeManagement;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.RAG;
 
 public class RetrievalResult
 {

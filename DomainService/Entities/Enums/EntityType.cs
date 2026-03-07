@@ -1,4 +1,4 @@
-namespace DomainService.Entities
+namespace DomainService.Entities.Enums
 {
     /// <summary>
     /// 实体类型枚举

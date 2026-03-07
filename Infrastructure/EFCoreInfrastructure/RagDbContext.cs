@@ -5,7 +5,16 @@ using System.Text;
 using Pgvector.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 namespace EFCoreInfrastructure;
-using DomainService.Entities;
+using DomainService.Entities.Core;
+using DomainService.Entities.KnowledgeManagement;
+using DomainService.Entities.KnowledgeGraph;
+using DomainService.Entities.Enums;
+using DomainService.Entities.VectorSearch;
+using DomainService.Entities.Chat;
+using DomainService.Entities.UserManagement;
+using DomainService.Entities.System;
+using DomainService.Entities.RAG;
+using DomainService.Entities.Analytics;
 public class RagDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
@@ -18,6 +27,7 @@ public class RagDbContext : DbContext
     public DbSet<RagGeneration> RagGenerations { get; set; }
     public DbSet<RagRetrievalLog> RagRetrievalLogs { get; set; }
     public DbSet<KnowledgeRelation> KnowledgeRelations { get; set; }
+    public DbSet<UserKnowledgeBase> UserKnowledgeBases { get; set; }
     public DbSet<GraphNode> GraphNodes { get; set; }
     public DbSet<GraphEdge> GraphEdges { get; set; }
     /// <summary>
@@ -86,6 +96,18 @@ public class RagDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(x => x.UserId);
             entity.HasIndex(x => x.CreatedAt);
+
+            // 与KnowledgeBase的关系（一对多）
+            entity.HasOne(x => x.KnowledgeBase)
+                .WithMany(x => x.ChatSessions)
+                .HasForeignKey(x => x.KnowledgeBaseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ReferencedKnowledgeBaseIds字段配置
+            entity.Property(x => x.ReferencedKnowledgeBaseIds)
+                .IsRequired(false);
+
+            entity.HasIndex(x => x.KnowledgeBaseId);
         });
         modelBuilder.Entity<Embedding>(entity =>
         {
@@ -107,6 +129,22 @@ public class RagDbContext : DbContext
             entity.Property(x => x.Name).IsRequired().HasMaxLength(100);
             entity.HasIndex(x => x.Name).IsUnique();
             entity.Property(x => x.Description).IsRequired();
+            entity.Property(x => x.IsPublic).IsRequired().HasDefaultValue(false);
+
+            // 与所有者的关系（可为空）
+            entity.HasOne(x => x.Owner)
+                .WithMany()
+                .HasForeignKey(x => x.OwnerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // 与用户访问权限的关系
+            entity.HasMany(x => x.UserAccesses)
+                .WithOne(x => x.KnowledgeBase)
+                .HasForeignKey(x => x.KnowledgeBaseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => x.OwnerId);
+            entity.HasIndex(x => x.IsPublic);
         });
         modelBuilder.Entity<KnowledgeChunk>(entity =>
         {
@@ -149,12 +187,17 @@ public class RagDbContext : DbContext
             entity.Property(x => x.ChunkCount)
                 .HasDefaultValue(0);
 
+            entity.Property(x => x.FileHash)
+                .IsRequired(false)
+                .HasMaxLength(64);
+
             entity.HasOne(x => x.KnowledgeBase)
                 .WithMany()
                 .HasForeignKey(x => x.KnowledgeBaseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(x => x.KnowledgeBaseId);
+            entity.HasIndex(x => x.FileHash);
         });
         modelBuilder.Entity<RagGeneration>(entity =>
         {
@@ -191,7 +234,46 @@ public class RagDbContext : DbContext
             entity.Property(x => x.UserName).HasMaxLength(20).IsRequired();
             entity.Property(x => x.Email).IsRequired();
             entity.Property(x => x.PasswordHash).IsRequired();
+
+            // 与可访问知识库的关系
+            entity.HasMany(x => x.AccessibleKnowledgeBases)
+                .WithOne(x => x.User)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
+
+        // UserKnowledgeBase实体配置（用户与知识库的多对多关系）
+        modelBuilder.Entity<UserKnowledgeBase>(entity =>
+        {
+            entity.ToTable("user_knowledge_base");
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.AccessLevel)
+                .IsRequired()
+                .HasConversion<int>();
+
+            // 与User的关系
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.AccessibleKnowledgeBases)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // 与KnowledgeBase的关系
+            entity.HasOne(x => x.KnowledgeBase)
+                .WithMany(x => x.UserAccesses)
+                .HasForeignKey(x => x.KnowledgeBaseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // 复合唯一索引，确保每个用户对每个知识库只有一条权限记录
+            entity.HasIndex(x => new { x.UserId, x.KnowledgeBaseId })
+                .IsUnique();
+
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => x.KnowledgeBaseId);
+            entity.HasIndex(x => x.AccessLevel);
+        });
+
+
 
         // KnowledgeRelation实体配置
         modelBuilder.Entity<KnowledgeRelation>(entity =>

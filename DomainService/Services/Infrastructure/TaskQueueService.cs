@@ -1,7 +1,16 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using DomainService.Entities;
+using DomainService.Entities.Core;
+using DomainService.Entities.KnowledgeManagement;
+using DomainService.Entities.KnowledgeGraph;
+using DomainService.Entities.Enums;
+using DomainService.Entities.VectorSearch;
+using DomainService.Entities.Chat;
+using DomainService.Entities.UserManagement;
+using DomainService.Entities.System;
+using DomainService.Entities.RAG;
+using DomainService.Entities.Analytics;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
 using DomainService.ServiceContract.CrossCutting;
@@ -20,7 +29,7 @@ public class TaskQueueService : ITaskQueueService
             TaskId = taskId,
             Type = TaskType.DocumentProcessing,
             TargetId = documentId,
-            Status = Entities.TaskStatus.Pending,
+            Status = Entities.Enums.TaskStatus.Pending,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -41,7 +50,7 @@ public class TaskQueueService : ITaskQueueService
             TaskId = taskId,
             Type = TaskType.VectorGeneration,
             TargetId = chunkId,
-            Status = Entities.TaskStatus.Pending,
+            Status = Entities.Enums.TaskStatus.Pending,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -54,7 +63,7 @@ public class TaskQueueService : ITaskQueueService
         return Task.FromResult(taskId);
     }
 
-    public Task<Entities.TaskStatus> GetTaskStatusAsync(string taskId)
+    public Task<Entities.Enums.TaskStatus> GetTaskStatusAsync(string taskId)
     {
         if (string.IsNullOrWhiteSpace(taskId))
             throw new ArgumentException("任务ID不能为空", nameof(taskId));
@@ -62,10 +71,10 @@ public class TaskQueueService : ITaskQueueService
         if (_tasks.TryGetValue(taskId, out var taskItem))
         {
             // 模拟任务状态变化（实际应用中应有后台工作者更新状态）
-            if (taskItem.Status == Entities.TaskStatus.Pending &&
+            if (taskItem.Status == Entities.Enums.TaskStatus.Pending &&
                 (DateTime.UtcNow - taskItem.CreatedAt).TotalSeconds > 5)
             {
-                taskItem.Status = Entities.TaskStatus.Completed;
+                taskItem.Status = Entities.Enums.TaskStatus.Completed;
                 taskItem.UpdatedAt = DateTime.UtcNow;
             }
 
@@ -80,7 +89,7 @@ public class TaskQueueService : ITaskQueueService
         public string TaskId { get; set; } = null!;
         public TaskType Type { get; set; }
         public Guid TargetId { get; set; }
-        public Entities.TaskStatus Status { get; set; }
+        public Entities.Enums.TaskStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

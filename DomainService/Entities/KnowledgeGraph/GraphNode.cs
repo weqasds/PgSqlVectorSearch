@@ -1,6 +1,8 @@
 using System;
+using DomainService.Entities.Core;
+using DomainService.Entities.Enums;
 
-namespace DomainService.Entities;
+namespace DomainService.Entities.KnowledgeGraph;
 
 /// <summary>
 /// 图节点实体
