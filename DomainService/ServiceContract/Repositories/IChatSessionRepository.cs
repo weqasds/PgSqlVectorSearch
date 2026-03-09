@@ -16,4 +16,7 @@ public interface IChatSessionRepository : IRepository<ChatSession>
 
     // Cleanup methods
     Task<IEnumerable<ChatSession>> GetSessionsOlderThanAsync(DateTime cutoffDate);
+
+    // Analytics methods
+    Task<int> GetTotalCountAsync();
 }

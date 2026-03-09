@@ -27,15 +27,7 @@ public class AuditLogService : IAuditLogService
         if (details == null)
             throw new ArgumentNullException(nameof(details));
 
-        var auditLog = new AuditLog
-        {
-            Id = Guid.NewGuid(),
-            Operation = operation,
-            UserId = userId,
-            Details = JsonSerializer.Serialize(details),
-            CreatedAt = DateTime.UtcNow,
-            IsDeleted = false
-        };
+        var auditLog = AuditLog.Create(operation, userId, JsonSerializer.Serialize(details));
 
         await _auditLogRepository.AddAsync(auditLog);
     }

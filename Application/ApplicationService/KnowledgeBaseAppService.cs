@@ -29,24 +29,32 @@ public class KnowledgeBaseAppService : IKnowledgeBaseAppService
     public async Task<KnowledgeBaseDto> CreateKnowledgeBaseAsync(CreateKnowledgeBaseRequest request)
     {
         var knowledgeBase = await _knowledgeBaseService.CreateKnowledgeBaseAsync(request.Name, request.Description);
-        return MapToDto(knowledgeBase);
+        return await MapToDtoAsync(knowledgeBase);
     }
 
     public async Task<KnowledgeBaseDto> GetKnowledgeBaseAsync(Guid id)
     {
         var knowledgeBase = await _knowledgeBaseService.GetKnowledgeBaseAsync(id);
-        return MapToDto(knowledgeBase);
+        return await MapToDtoAsync(knowledgeBase);
     }
 
     public async Task<PagedResult<KnowledgeBaseDto>> ListKnowledgeBasesAsync(int page, int pageSize)
     {
         var allKnowledgeBases = await _knowledgeBaseService.ListKnowledgeBasesAsync();
         var totalCount = allKnowledgeBases.Count();
-        var items = allKnowledgeBases
+
+        var pagedKnowledgeBases = allKnowledgeBases
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(MapToDto)
             .ToList();
+
+        // Convert each knowledge base to DTO asynchronously
+        var items = new List<KnowledgeBaseDto>();
+        foreach (var knowledgeBase in pagedKnowledgeBases)
+        {
+            var dto = await MapToDtoAsync(knowledgeBase);
+            items.Add(dto);
+        }
 
         return new PagedResult<KnowledgeBaseDto>
         {
@@ -81,17 +89,18 @@ public class KnowledgeBaseAppService : IKnowledgeBaseAppService
         await Task.WhenAll(processingTasks);
     }
 
-    private KnowledgeBaseDto MapToDto(KnowledgeBase knowledgeBase)
+    private async Task<KnowledgeBaseDto> MapToDtoAsync(KnowledgeBase knowledgeBase)
     {
-        // Note: DocumentCount needs to be retrieved from repository
-        // For simplicity, we'll set to 0 initially; could be enhanced with caching or direct query
+        // Get actual document count from repository
+        var documentCount = await _knowledgeDocumentRepository.GetDocumentCountAsync(knowledgeBase.Id);
+
         return new KnowledgeBaseDto
         {
             Id = knowledgeBase.Id,
             Name = knowledgeBase.Name,
             Description = knowledgeBase.Description,
             CreatedAt = knowledgeBase.CreatedAt,
-            DocumentCount = 0 // Will be updated when needed
+            DocumentCount = documentCount
         };
     }
 }

@@ -4,4 +4,5 @@
   <Project Path="DomainService/DomainService.csproj" Id="df583fa7-347b-4b32-b014-86359019a94d" />
   <Project Path="Infrastructure/EFCoreInfrastructure/EFCoreInfrastructure.csproj" Id="8497fa43-28c4-4948-998c-20f7df9fb1cb" />
   <Project Path="PgSqlVectorSearch/PgSqlVectorSearch.csproj" />
+  <Project Path="Infrastructure/SemanticKernelAI/SemanticKernelAI.csproj" Id="d1c8e5b9-7a3e-4c8b-9f0e-2a1b6c9f8e5a" />
 </Solution>

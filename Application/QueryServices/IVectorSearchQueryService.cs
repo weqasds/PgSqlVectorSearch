@@ -7,10 +7,10 @@ using Pgvector;
 namespace Application.QueryServices;
 
 /// <summary>
-/// 嵌入向量查询服务接口
+/// 向量搜索查询服务接口
 /// 负责向量检索相关的复杂查询操作
 /// </summary>
-public interface IEmbeddingQueryService : IQueryService<Embedding>
+public interface IVectorSearchQueryService : IQueryService<Embedding>
 {
     /// <summary>
     /// 根据知识块ID获取嵌入向量

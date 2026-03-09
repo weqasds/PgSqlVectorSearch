@@ -59,15 +59,7 @@ public class AuthService : IAuthService
         if (emailExists)
             throw new InvalidOperationException($"邮箱 '{email}' 已存在");
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            UserName = username,
-            Email = email,
-            PasswordHash = ComputeHash(password),
-            CreatedAt = DateTime.UtcNow,
-            IsDeleted = false
-        };
+        var user = User.Create(username, email, ComputeHash(password));
 
         await _userRepository.AddAsync(user);
         return user;

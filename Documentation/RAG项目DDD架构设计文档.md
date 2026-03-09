@@ -85,6 +85,13 @@ graph TB
 #### 3.1.3 RAG处理领域
 - **RagGeneration** (RAG生成记录)
 - **RagRetrievalLog** (检索日志)
+- **向量存储基础设施**: 引入`IVectorStore`接口，将向量存储和相似性搜索作为基础设施层服务，遵循依赖倒置原则，`EmbeddingRepository`实现此接口提供pgvector支持
+
+#### 3.1.4 权限与关联关系
+- **用户-知识库权限关系**: 通过`UserKnowledgeBase`实体实现多对多关系，支持`OwnerId`、`IsPublic`字段和`AccessLevel`权限级别
+- **对话-知识库关联关系**: 一对多关系，`ChatSession`通过`KnowledgeBaseId`关联主要知识库，通过`ReferencedKnowledgeBaseIds`（JSON数组）记录引用的其他知识库
+- **文件去重机制**: `KnowledgeDocument`实体新增`FileHash`字段，支持基于哈希值的重复文件检测
+- **QueryService架构**: 引入QueryService模式，分离读写职责，Repository负责写操作，QueryService负责复杂查询操作
 
 ### 3.2 领域服务接口设计
 
@@ -191,6 +198,47 @@ public interface IAuditLogService
 {
     Task LogOperationAsync(string operation, int? userId, object details);
     Task<IEnumerable<AuditLog>> QueryLogsAsync(DateTime start, DateTime end, string? operation);
+}
+```
+
+##### 3.2.6.6 向量存储服务
+```csharp
+public interface IVectorStore
+{
+    /// <summary>
+    /// 根据知识块ID获取嵌入向量
+    /// </summary>
+    Task<Embedding?> GetByChunkIdAsync(Guid chunkId);
+
+    /// <summary>
+    /// 搜索相似的嵌入向量
+    /// </summary>
+    Task<IEnumerable<Embedding>> SearchSimilarAsync(Vector queryVector, int limit, DistanceMetric metric = DistanceMetric.L2);
+
+    /// <summary>
+    /// 添加嵌入向量
+    /// </summary>
+    Task AddAsync(Embedding embedding);
+
+    /// <summary>
+    /// 批量添加嵌入向量
+    /// </summary>
+    Task AddRangeAsync(IEnumerable<Embedding> embeddings);
+
+    /// <summary>
+    /// 根据知识块ID删除嵌入向量
+    /// </summary>
+    Task DeleteByChunkIdAsync(Guid chunkId);
+
+    /// <summary>
+    /// 带过滤条件的向量相似度搜索
+    /// </summary>
+    Task<IEnumerable<Embedding>> SearchSimilarWithFilterAsync(
+        Vector queryVector,
+        int limit,
+        DistanceMetric metric = DistanceMetric.L2,
+        Guid? knowledgeBaseId = null,
+        Guid? documentId = null);
 }
 ```
 
@@ -427,51 +475,122 @@ public class KnowledgeBaseController : ControllerBase
 
 ### 6.1 项目结构优化建议
 
-#### 6.1.1 当前结构问题
-- 服务接口未实际实现
+#### 6.1.1 当前结构进展
+**✅ 已完成的核心架构**
+1. **领域服务接口与实现**：核心领域服务已基本实现（RagGenerationService、ChatService、KnowledgeBaseService、DocumentProcessingService、VectorRetrievalService、AuthService等）
+2. **用户权限与关联关系**：用户-知识库权限关系（UserKnowledgeBase）、对话-知识库关联关系、文件去重机制已实现
+3. **QueryService架构**：完整实现CQRS模式，Repository负责写操作，QueryService负责复杂查询
+4. **Semantic Kernel AI集成**：AI服务基础设施已完成（OpenAILLMService、OpenAIEmbeddingService、PromptTemplateService）
+5. **应用服务与API**：应用服务层基本实现，API控制器框架就绪
+6. **仓储接口重构与向量存储**：遵循DDD聚合根原则，移除非聚合根仓储接口（IEmbeddingRepository、IChatMessageRepository、IKnowledgeChunkRepository），引入IVectorStore基础设施服务，将向量存储职责分离为独立服务
 
-#### 6.1.2 重构建议
-1. **领域模型已就位（已完成）**
-   - 领域实体已在DomainService/Entities中定义
-   - DataMigration正确引用领域实体
+**⚠️ 待解决的结构问题**
+1. **依赖注入配置**：`Program.cs`中服务注册已部分完成（已注册IVectorStore、IEmbeddingService等），但仍需注册所有领域服务、应用服务和仓储接口
+2. **服务集成**：AI服务与领域服务尚未完全集成，RAG核心流程需要连接测试
+3. **配置管理**：数据库连接字符串硬编码，需要迁移到配置文件
+4. **权限集成**：权限验证逻辑需要集成到服务层和API层
+5. **前端对接**：需要配置CORS和API客户端，确保前后端通信
+6. **仓储接口一致性**：需要确保所有仓储接口只对应聚合根，移除非聚合根仓储的使用
 
-2. **实现服务接口**
-   - 在DomainService/Service中实现领域服务
-   - 在Application/ApplicationService中实现应用服务
-   - 在PgSqlVectorSearch/Services中实现API服务
+#### 6.1.2 下一步实施建议
+1. **完善依赖注入配置（优先级：高）**
+   - 更新`Program.cs`，注册所有领域服务、应用服务、QueryService和AI服务
+   - 配置数据库上下文，使用配置文件管理连接字符串
+   - 添加授权中间件和CORS配置
+
+2. **集成RAG核心流程（优先级：高）**
+   - 连接`RagGenerationService`与`OpenAIEmbeddingService`、`OpenAILLMService`
+   - 测试向量检索和生成完整流程
+   - 实现`PromptTemplateService`的模板管理
+
+3. **完善权限管理（优先级：中）**
+   - 在服务层集成`UserKnowledgeBaseService`权限验证
+   - 在API控制器添加授权属性
+   - 实现公共知识库访问逻辑
+
+4. **前端对接配置（优先级：中）**
+   - 配置CORS允许前端开发服务器（端口5173）
+   - 更新前端API客户端，连接实际后端端点
+   - 验证用户认证流程
+
+5. **数据库优化（优先级：低）**
+   - 为向量列创建IVFFlat索引提升查询性能
+   - 实现连接池配置
+   - 添加数据库健康检查
 
 ### 6.2 依赖注入配置
 
 ```csharp
-// Program.cs 中的服务注册
-public static void ConfigureServices(IServiceCollection services)
+// Program.cs 中的服务注册（更新版，反映仓储重构和向量存储引入）
+public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 {
-    // 领域服务
+    // 1. 数据库上下文配置（使用appsettings.json配置）
+    services.AddDbContext<RagDbContext>(options =>
+        options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
+    // 2. QueryService注册（CQRS查询服务）
+    services.AddScoped(typeof(IQueryService<>), typeof(QueryServiceBase<>));
+    services.AddScoped<IVectorSearchQueryService, VectorSearchQueryService>();
+    // 注意：IKnowledgeBaseQueryService和IKnowledgeChunkQueryService的实现可能在其他项目中
+
+    // 3. 仓储接口注册（只对应聚合根）
+    services.AddScoped(typeof(IRepository<>), typeof(RepositoryBase<>));
+    services.AddScoped<IKnowledgeBaseRepository, KnowledgeBaseRepository>();
+    services.AddScoped<IKnowledgeDocumentRepository, KnowledgeDocumentRepository>();
+    // 注意：IKnowledgeChunkRepository、IEmbeddingRepository、IChatMessageRepository已被移除
+    // 这些非聚合根实体应通过聚合根或专用服务访问
+    services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
+    services.AddScoped<IUserRepository, UserRepository>();
+    services.AddScoped<IUserKnowledgeBaseRepository, UserKnowledgeBaseRepository>();
+    services.AddScoped<IRagGenerationRepository, RagGenerationRepository>();
+
+    // 4. 向量存储基础设施服务（替代IEmbeddingRepository）
+    services.AddScoped<IVectorStore, EmbeddingRepository>();
+
+    // 5. AI服务注册
+    services.AddScoped<IEmbeddingService, OpenAIEmbeddingService>();
+    services.AddScoped<ILLMService, OpenAILLMService>();
+    services.AddScoped<ISemanticKernelService, SemanticKernelService>();
+    services.AddScoped<IPromptTemplateService, PromptTemplateService>();
+
+    // 6. 领域服务注册
     services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
     services.AddScoped<IDocumentProcessingService, DocumentProcessingService>();
     services.AddScoped<IVectorRetrievalService, VectorRetrievalService>();
     services.AddScoped<IRagGenerationService, RagGenerationService>();
     services.AddScoped<IChatService, ChatService>();
     services.AddScoped<IAuthService, AuthService>();
-    services.AddScoped<IFileStorageService, FileStorageService>();
-    services.AddScoped<ITaskQueueService, TaskQueueService>();
-    services.AddScoped<ICacheService, CacheService>();
-    services.AddScoped<IAuditLogService, AuditLogService>();
+    services.AddScoped<IUserKnowledgeBaseService, UserKnowledgeBaseService>();
 
-    // 应用服务
+    // 7. 应用服务注册
     services.AddScoped<IKnowledgeBaseAppService, KnowledgeBaseAppService>();
     services.AddScoped<IRagChatAppService, RagChatAppService>();
     services.AddScoped<IDocumentManagementAppService, DocumentManagementAppService>();
     services.AddScoped<ISystemAdminAppService, SystemAdminAppService>();
     services.AddScoped<IAnalyticsAppService, AnalyticsAppService>();
     services.AddScoped<IBatchOperationAppService, BatchOperationAppService>();
+    services.AddScoped<IAuthAppService, AuthAppService>();
+    services.AddScoped<IUserAppService, UserAppService>();
 
-    // 基础设施
-    services.AddDbContext<RagDbContext>(options =>
-        options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+    // 8. 控制器自动注册
+    services.AddControllers();
 
-    // 外部服务
-    services.AddSingleton<ISemanticKernelService, SemanticKernelService>();
+    // 9. CORS配置（前端开发服务器端口5173）
+    services.AddCors(options =>
+    {
+        options.AddPolicy("FrontendDev",
+            builder => builder
+                .WithOrigins("http://localhost:5173")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
+    });
+
+    // 10. 授权认证配置
+    services.AddAuthorization();
+
+    // 11. Swagger/OpenAPI文档
+    services.AddOpenApi();
 }
 ```
 
@@ -515,27 +634,131 @@ sequenceDiagram
 
 ## 7. 总结与后续规划
 
-### 7.1 当前状态评估
-- ✅ 项目分层结构基本符合DDD
-- ⚠️ 服务接口需要实现
-- ✅ 数据库设计合理
-- ✅ 领域和应用服务接口设计完善
+### 7.1 当前状态评估（2026-03-09更新）
 
-### 7.2 后续开发任务
-1. **短期任务** (1-2周)
-   - 实现核心领域服务
-   - 完成知识库管理功能
-   - 实现基础RAG对话
+#### ✅ 已完成的核心架构
+1. **DDD分层结构完整**
+   - 领域层 (DomainService)：包含完整领域实体和接口定义
+   - 应用层 (Application)：应用服务接口和实现基本完成
+   - 基础设施层 (Infrastructure)：仓储实现、QueryService、AI服务集成
+   - 表现层 (PgSqlVectorSearch)：API控制器基本实现
 
-2. **中期任务** (3-4周)
-   - 完善文档处理流程
-   - 优化向量检索性能
-   - 实现用户管理系统
+2. **领域模型完善**
+   - 核心实体：KnowledgeBase、KnowledgeDocument、KnowledgeChunk、Embedding、User、ChatSession、ChatMessage、RagGeneration等
+   - 权限关系：User-KnowledgeBase多对多关系，支持OwnerId、IsPublic、AccessLevel
+   - 关联关系：ChatSession-KnowledgeBase关联，ReferencedKnowledgeBaseIds JSON字段
+   - 文件去重：KnowledgeDocument.FileHash支持重复文件检测
 
-3. **长期任务** (5-8周)
-   - 添加高级RAG功能（重排序、混合检索）
-   - 实现多模态支持
-   - 添加监控和日志系统
+3. **仓储模式与QueryService架构**
+   - **Repository模式**：完整实现`IRepository<T>`接口，支持CRUD、批量操作、条件查询
+   - **仓储接口重构**：遵循DDD聚合根原则，移除非聚合根仓储接口（`IEmbeddingRepository`、`IChatMessageRepository`、`IKnowledgeChunkRepository`），引入`IVectorStore`基础设施服务处理向量存储和相似性搜索
+   - **QueryService架构**：引入CQRS原则，分离读写职责
+     - Repository：负责写操作和基本查询
+     - QueryService：负责复杂查询（包含导航属性、排序、分页、投影等）
+   - 已实现`IQueryService<T>`、`IKnowledgeBaseQueryService`、`IKnowledgeChunkQueryService`、`IVectorSearchQueryService`（替代`IEmbeddingQueryService`）
+
+4. **服务层实现**
+   - **领域服务**：大部分已实现
+     - `RagGenerationService`、`ChatService`、`KnowledgeBaseService`、`DocumentProcessingService`
+     - `VectorRetrievalService`、`AuthService`、`UserKnowledgeBaseService`等
+   - **应用服务**：主要接口已实现
+     - `RagChatAppService`、`KnowledgeBaseAppService`、`DocumentManagementAppService`
+     - `AuthAppService`、`UserAppService`、`SystemAdminAppService`等
+   - **AI服务集成**：Semantic Kernel基础设施完成
+     - `ISemanticKernelService`接口定义
+     - `OpenAILLMService`、`OpenAIEmbeddingService`实现
+     - `PromptTemplateService`支持模板管理
+
+5. **API层实现**
+   - RESTful API控制器基本完成：`KnowledgeBaseController`、`ChatController`、`DocumentController`、`AuthController`等
+   - API端点符合设计文档规范
+   - DTO数据传输对象定义完整
+
+#### ⚠️ 待完善/待集成部分
+1. **依赖注入配置**
+   - `Program.cs`中服务注册已部分完成（已注册IVectorStore、IEmbeddingService等），但仍需注册所有领域服务、应用服务和仓储接口
+   - 数据库连接字符串目前硬编码，需要迁移到配置系统
+
+2. **RAG核心流程集成**
+   - AI服务（Semantic Kernel）已实现，但尚未与领域服务完全集成
+   - `RagGenerationService`需要连接`OpenAIEmbeddingService`和`OpenAILLMService`
+   - 向量检索流程需要完整测试
+
+3. **权限管理逻辑**
+   - `UserKnowledgeBaseService`已实现，但权限验证逻辑需要集成到各服务
+   - API层需要添加授权中间件
+
+4. **功能完整性**
+   - 部分控制器方法未完全实现（如更新、删除操作）
+   - 批量操作、统计分析等功能待测试验证
+
+5. **数据库配置**
+   - 目前使用硬编码连接字符串，需要改为配置驱动
+   - 向量索引优化（IVFFlat）尚未实施
+
+6. **前端集成**
+   - 前端项目（fronted/）存在，但需要与后端API完全对接
+   - 需要配置CORS和API客户端
+
+7. **仓储接口一致性**
+   - 需要确保所有仓储接口只对应聚合根，移除非聚合根仓储的使用
+   - 更新服务层代码，使用聚合根仓储或专用服务访问非聚合根实体
+
+### 7.2 后续开发任务（基于当前状态）
+
+#### 阶段一：系统集成与配置（1-2周）
+**目标**：使系统可运行，完成核心流程集成
+
+1. **依赖注入与配置完善**
+   - 更新`Program.cs`实现完整的服务注册（参考6.2节）
+   - 将数据库连接字符串迁移到`appsettings.json`配置文件
+   - 配置CORS支持前端开发服务器（端口5173）
+
+2. **RAG核心流程集成**
+   - 连接`RagGenerationService`与AI服务（`OpenAIEmbeddingService`、`OpenAILLMService`）
+   - 测试向量检索、生成完整流程
+   - 验证`PromptTemplateService`模板功能
+
+3. **权限管理集成**
+   - 在服务层集成`UserKnowledgeBaseService`权限验证
+   - 在API控制器添加授权属性
+   - 测试公共/私有知识库访问控制
+
+#### 阶段二：功能完善与测试（2-3周）
+**目标**：完善系统功能，确保核心业务流程可用
+
+1. **API功能完善**
+   - 补全控制器缺失方法（更新、删除操作）
+   - 实现批量操作接口测试
+   - 完善错误处理和验证逻辑
+
+2. **前端对接**
+   - 配置前端API客户端连接实际后端
+   - 验证用户认证、知识库管理、对话等核心功能
+   - 测试文件上传和文档处理流程
+
+3. **数据库优化**
+   - 为向量列创建IVFFlat索引提升查询性能
+   - 实现连接池配置
+   - 添加数据库健康检查端点
+
+#### 阶段三：性能优化与监控（3-4周）
+**目标**：提升系统性能，增加可观测性
+
+1. **缓存策略实施**
+   - 实现热门查询结果缓存
+   - 添加向量缓存减少AI API调用
+   - 文档元数据缓存优化
+
+2. **异步处理优化**
+   - 文档处理后台任务队列
+   - 批量向量生成优化
+   - 异步日志记录系统
+
+3. **监控与可观测性**
+   - 添加系统健康检查端点
+   - 实现请求/响应日志中间件
+   - 集成应用性能监控（APM）工具
 
 ### 7.3 性能优化建议
 1. **数据库优化**
@@ -555,7 +778,7 @@ sequenceDiagram
 
 ---
 
-**文档版本**: 1.0  
-**最后更新**: 2026-03-04
-**作者**: 架构设计团队  
-**状态**: 审核通过
+**文档版本**: 1.3
+**最后更新**: 2026-03-09
+**作者**: 架构设计团队
+**状态**: 已更新，反映当前项目状态（包含仓储接口重构和向量存储引入）

@@ -27,14 +27,7 @@ public class KnowledgeBaseService : IKnowledgeBaseService
         if (exists)
             throw new InvalidOperationException($"知识库名称 '{name}' 已存在");
 
-        var knowledgeBase = new KnowledgeBase
-        {
-            Id = Guid.NewGuid(),
-            Name = name,
-            Description = description,
-            CreatedAt = DateTime.UtcNow,
-            IsDeleted = false
-        };
+        var knowledgeBase = KnowledgeBase.Create(name, description);
 
         await _knowledgeBaseRepository.AddAsync(knowledgeBase);
         return knowledgeBase;

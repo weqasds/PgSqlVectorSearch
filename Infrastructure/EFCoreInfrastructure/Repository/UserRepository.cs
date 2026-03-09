@@ -58,4 +58,20 @@ public class UserRepository : RepositoryBase<User>, IUserRepository
         var endDateTime = date.ToDateTime(TimeOnly.MaxValue);
         return await _dbSet.CountAsync(u => u.ModifiedAt >= startDateTime && u.ModifiedAt <= endDateTime);
     }
+
+    public async Task<User> GetUserWithAccessibleKnowledgeBasesAsync(Guid userId)
+    {
+        return await _dbSet
+            .Include(u => u.AccessibleKnowledgeBases)
+                .ThenInclude(akb => akb.KnowledgeBase)
+            .FirstOrDefaultAsync(u => u.Id == userId)
+            .ContinueWith(task =>
+            {
+                var user = task.Result;
+                if (user == null)
+                    throw new KeyNotFoundException($"未找到ID为{userId}的用户");
+                return user;
+            });
+    }
+
 }

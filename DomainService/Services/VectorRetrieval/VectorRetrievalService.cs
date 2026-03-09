@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DomainService.Entities.Core;using DomainService.Entities.KnowledgeManagement;using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
+using DomainService.Entities.Core;
+using DomainService.Entities.Enums;
+using DomainService.Entities.RAG;
+using DomainService.Entities.VectorSearch;
 using DomainService.ServiceContract.Services;
-using DomainService.ServiceContract.Repositories;
 using DomainService.ServiceContract.CrossCutting;
 using Pgvector;
 
@@ -12,18 +14,22 @@ namespace DomainService.Services.VectorRetrieval;
 
 public class VectorRetrievalService : IVectorRetrievalService
 {
-    private readonly IEmbeddingRepository _embeddingRepository;
-    private readonly IKnowledgeChunkRepository _knowledgeChunkRepository;
+    private readonly IVectorStore _vectorStore;
+    private readonly IEmbeddingService _embeddingService;
 
     public VectorRetrievalService(
-        IEmbeddingRepository embeddingRepository,
-        IKnowledgeChunkRepository knowledgeChunkRepository)
+        IVectorStore vectorStore,
+        IEmbeddingService embeddingService)
     {
-        _embeddingRepository = embeddingRepository;
-        _knowledgeChunkRepository = knowledgeChunkRepository;
+        _vectorStore = vectorStore;
+        _embeddingService = embeddingService;
     }
 
-    public async Task<IEnumerable<RetrievalResult>> SearchSimilarChunksAsync(string query, int topK = 5)
+    public async Task<IEnumerable<RetrievalResult>> SearchSimilarChunksAsync(
+        string query,
+        int topK = 5,
+        Guid? knowledgeBaseId = null,
+        Guid? documentId = null)
     {
         if (string.IsNullOrWhiteSpace(query))
             throw new ArgumentException("查询文本不能为空", nameof(query));
@@ -34,18 +40,34 @@ public class VectorRetrievalService : IVectorRetrievalService
         // 生成查询向量
         var queryVector = await GenerateEmbeddingAsync(query);
 
-        // 搜索相似向量
-        var similarEmbeddings = await _embeddingRepository.SearchSimilarAsync(queryVector, topK);
+        // 搜索相似向量，使用余弦距离以保持与相似度计算的一致性
+        IEnumerable<Embedding> similarEmbeddings;
+        if (knowledgeBaseId.HasValue || documentId.HasValue)
+        {
+            // 使用带过滤的搜索
+            similarEmbeddings = await _vectorStore.SearchSimilarWithFilterAsync(
+                queryVector,
+                topK,
+                DistanceMetric.Cosine,
+                knowledgeBaseId,
+                documentId);
+        }
+        else
+        {
+            // 使用普通搜索
+            similarEmbeddings = await _vectorStore.SearchSimilarAsync(queryVector, topK, DistanceMetric.Cosine);
+        }
 
         var results = new List<RetrievalResult>();
         foreach (var embedding in similarEmbeddings)
         {
-            // 获取对应的知识块
-            var chunk = await _knowledgeChunkRepository.GetByIdAsync(embedding.ChunkId);
+            // 检查知识块是否存在且未被删除
+            // 注意：如果使用了Include，embedding.Chunk可能已经加载
+            var chunk = embedding.Chunk;
             if (chunk == null || chunk.IsDeleted)
                 continue;
 
-            // 计算相似度分数（假设SearchSimilarAsync已经按相似度排序）
+            // 计算相似度分数（余弦相似度）
             var similarity = await CalculateSimilarityAsync(queryVector, embedding.Vector);
 
             results.Add(new RetrievalResult
@@ -63,18 +85,8 @@ public class VectorRetrievalService : IVectorRetrievalService
         if (string.IsNullOrWhiteSpace(text))
             throw new ArgumentException("文本不能为空", nameof(text));
 
-        // TODO: 调用AI服务（如OpenAI、Azure OpenAI等）生成文本向量
-        // 这里返回一个模拟的1536维向量
-        // 实际实现应该调用Semantic Kernel或其他嵌入服务
-
-        var random = new Random();
-        var values = new float[1536];
-        for (int i = 0; i < values.Length; i++)
-        {
-            values[i] = (float)random.NextDouble() * 2 - 1; // 生成-1到1之间的随机数
-        }
-
-        return new Vector(values);
+        // 使用IEmbeddingService生成文本向量
+        return await _embeddingService.GenerateEmbeddingAsync(text);
     }
 
     public async Task<double> CalculateSimilarityAsync(Vector v1, Vector v2)

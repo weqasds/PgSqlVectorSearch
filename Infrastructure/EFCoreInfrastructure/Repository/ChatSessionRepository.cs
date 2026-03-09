@@ -51,4 +51,9 @@ public class ChatSessionRepository : RepositoryBase<ChatSession>, IChatSessionRe
         return await _dbSet.Where(s => s.CreatedAt < cutoffDate)
             .ToListAsync();
     }
+
+    public async Task<int> GetTotalCountAsync()
+    {
+        return await _dbSet.CountAsync();
+    }
 }

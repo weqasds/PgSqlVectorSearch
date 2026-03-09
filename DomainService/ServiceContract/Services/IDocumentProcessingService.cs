@@ -9,6 +9,7 @@ namespace DomainService.ServiceContract.Services;
 public interface IDocumentProcessingService
 {
     Task<KnowledgeDocument> UploadDocumentAsync(Guid knowledgeBaseId, Stream fileStream, string fileName);
+    Task<KnowledgeDocument?> FindDuplicateDocumentAsync(Guid knowledgeBaseId, string fileHash);
     Task ProcessDocumentAsync(Guid documentId);
     Task<IEnumerable<KnowledgeChunk>> GetDocumentChunksAsync(Guid documentId);
 }

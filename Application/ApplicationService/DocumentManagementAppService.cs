@@ -2,11 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DomainService.Entities.Core;using DomainService.Entities.KnowledgeManagement;using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
+using DomainService.Entities.Core;
+using DomainService.Entities.KnowledgeManagement;
+using DomainService.Entities.KnowledgeGraph;
+using DomainService.Entities.Enums;
+using DomainService.Entities.VectorSearch;
+using DomainService.Entities.Chat;
+using DomainService.Entities.UserManagement;
+using DomainService.Entities.System;
+using DomainService.Entities.RAG;
+using DomainService.Entities.Analytics;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
 using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
+using Application.QueryServices;
 
 namespace Application.ApplicationService;
 
@@ -14,16 +24,15 @@ public class DocumentManagementAppService : IDocumentManagementAppService
 {
     private readonly IDocumentProcessingService _documentProcessingService;
     private readonly IKnowledgeDocumentRepository _knowledgeDocumentRepository;
-    private readonly IKnowledgeChunkRepository _knowledgeChunkRepository;
-
+    private readonly IKnowledgeChunkQueryService _knowledgeChunkService;
     public DocumentManagementAppService(
+        IKnowledgeChunkQueryService knowledgeChunkService,
         IDocumentProcessingService documentProcessingService,
-        IKnowledgeDocumentRepository knowledgeDocumentRepository,
-        IKnowledgeChunkRepository knowledgeChunkRepository)
+        IKnowledgeDocumentRepository knowledgeDocumentRepository)
     {
+        _knowledgeChunkService = knowledgeChunkService;
         _documentProcessingService = documentProcessingService;
         _knowledgeDocumentRepository = knowledgeDocumentRepository;
-        _knowledgeChunkRepository = knowledgeChunkRepository;
     }
 
     public async Task<DocumentDto> UploadDocumentAsync(Guid knowledgeBaseId, FileUpload file)
@@ -43,7 +52,12 @@ public class DocumentManagementAppService : IDocumentManagementAppService
         var documents = await _knowledgeDocumentRepository.GetByKnowledgeBaseIdAsync(knowledgeBaseId);
         return documents.Select(MapToDto);
     }
-
+    /// <summary>
+    /// 删除文档及其关联的知识块
+    /// </summary>
+    /// <param name="documentId"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     public async Task DeleteDocumentAsync(Guid documentId)
     {
         var document = await _knowledgeDocumentRepository.GetByIdAsync(documentId);
@@ -53,10 +67,10 @@ public class DocumentManagementAppService : IDocumentManagementAppService
         }
 
         // Delete associated chunks first
-        var chunks = await _knowledgeChunkRepository.GetByDocumentIdAsync(documentId);
+        var chunks = await _knowledgeChunkService.GetByDocumentIdAsync(documentId);
         foreach (var chunk in chunks)
         {
-            await _knowledgeChunkRepository.DeleteAsync(chunk);
+            chunk.IsDeleted = true;
         }
 
         // Delete document

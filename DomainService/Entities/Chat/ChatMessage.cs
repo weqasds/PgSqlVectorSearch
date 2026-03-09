@@ -20,7 +20,16 @@ public class ChatMessage : Entity<Guid>
 }
 public enum ChatRole
 {
+    /// <summary>
+    /// 系统消息，通常用于提示构建中的对话历史
+    /// </summary>
     System,
+    /// <summary>
+    /// 用户消息，表示用户输入的内容
+    /// </summary>
     User,
+    /// <summary>
+    /// 助手消息，表示AI生成的回复内容
+    /// </summary>
     Assistant
 }

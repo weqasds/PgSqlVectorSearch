@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DomainService.Entities.Chat;
 using DomainService.Entities.RAG;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
-using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
+using DomainService.Entities.Chat;
 
 namespace Application.ApplicationService;
 
@@ -17,26 +16,23 @@ public class RagChatAppService : IRagChatAppService
     private readonly IRagGenerationService _ragGenerationService;
     private readonly IKnowledgeBaseService _knowledgeBaseService;
     private readonly IChatSessionRepository _chatSessionRepository;
-    private readonly IChatMessageRepository _chatMessageRepository;
 
     public RagChatAppService(
         IChatService chatService,
         IRagGenerationService ragGenerationService,
         IKnowledgeBaseService knowledgeBaseService,
-        IChatSessionRepository chatSessionRepository,
-        IChatMessageRepository chatMessageRepository)
+        IChatSessionRepository chatSessionRepository)
     {
         _chatService = chatService;
         _ragGenerationService = ragGenerationService;
         _knowledgeBaseService = knowledgeBaseService;
         _chatSessionRepository = chatSessionRepository;
-        _chatMessageRepository = chatMessageRepository;
     }
 
     public async Task<ChatSessionDto> CreateChatSessionAsync(Guid userId, string title)
     {
         var session = await _chatService.CreateSessionAsync(userId, title);
-        return MapToDto(session);
+        return await MapToDtoAsync(session);
     }
 
     public async Task<ChatResponseDto> SendMessageAsync(Guid sessionId, SendMessageRequest request)
@@ -80,7 +76,16 @@ public class RagChatAppService : IRagChatAppService
     public async Task<IEnumerable<ChatSessionDto>> GetUserChatSessionsAsync(Guid userId)
     {
         var sessions = await _chatService.GetUserSessionsAsync(userId);
-        return sessions.Select(MapToDto);
+
+        // Convert each session to DTO asynchronously
+        var sessionDtos = new List<ChatSessionDto>();
+        foreach (var session in sessions)
+        {
+            var dto = await MapToDtoAsync(session);
+            sessionDtos.Add(dto);
+        }
+
+        return sessionDtos;
     }
 
     public async Task<ChatHistoryDto> GetChatHistoryAsync(Guid sessionId)
@@ -101,9 +106,12 @@ public class RagChatAppService : IRagChatAppService
         };
     }
 
-    private ChatSessionDto MapToDto(ChatSession session)
+    private async Task<ChatSessionDto> MapToDtoAsync(ChatSession session)
     {
-        // MessageCount could be retrieved from repository; for simplicity we'll set to 0
+        // Get actual message count from repository
+        var messages = await _chatService.GetSessionMessagesAsync(session.Id);
+        var messageCount = messages?.Count() ?? 0;
+
         return new ChatSessionDto
         {
             Id = session.Id,
@@ -111,7 +119,7 @@ public class RagChatAppService : IRagChatAppService
             Title = session.ChatTitle,
             CreatedAt = session.CreatedAt,
             LastActivityAt = session.ModifiedAt,
-            MessageCount = 0
+            MessageCount = messageCount
         };
     }
 

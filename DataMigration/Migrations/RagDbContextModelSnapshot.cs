@@ -81,8 +81,14 @@ namespace DataMigration.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid?>("KnowledgeBaseId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReferencedKnowledgeBaseIds")
+                        .HasColumnType("text");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -90,6 +96,8 @@ namespace DataMigration.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("KnowledgeBaseId");
 
                     b.HasIndex("UserId");
 
@@ -338,6 +346,10 @@ namespace DataMigration.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("FileHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -366,6 +378,8 @@ namespace DataMigration.Migrations
                         .HasDefaultValue(DocumentStatus.Pending);
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FileHash");
 
                     b.HasIndex("KnowledgeBaseId");
 
@@ -552,11 +566,18 @@ namespace DataMigration.Migrations
 
             modelBuilder.Entity("DomainService.Entities.Chat.ChatSession", b =>
                 {
+                    b.HasOne("DomainService.Entities.KnowledgeManagement.KnowledgeBase", "KnowledgeBase")
+                        .WithMany("ChatSessions")
+                        .HasForeignKey("KnowledgeBaseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("DomainService.Entities.UserManagement.User", "User")
                         .WithMany("ChatSessions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("KnowledgeBase");
 
                     b.Navigation("User");
                 });
@@ -712,6 +733,8 @@ namespace DataMigration.Migrations
 
             modelBuilder.Entity("DomainService.Entities.KnowledgeManagement.KnowledgeBase", b =>
                 {
+                    b.Navigation("ChatSessions");
+
                     b.Navigation("UserAccesses");
                 });
 

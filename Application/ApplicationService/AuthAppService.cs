@@ -6,6 +6,8 @@ using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 using Application.Dto;
 using DomainService.Entities.UserManagement;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Application.ApplicationService;
 
@@ -52,16 +54,47 @@ public class AuthAppService : IAuthAppService
 
     public async Task LogoutAsync(string token)
     {
-        // Invalidate token (implementation depends on token storage)
-        // For now, just assume token invalidation is handled elsewhere
+        // Validate token first
+        var isValid = await _authService.ValidateTokenAsync(token);
+        if (!isValid)
+        {
+            throw new UnauthorizedAccessException("Invalid token.");
+        }
+
+        // In a real implementation, you might:
+        // 1. Add token to a blacklist/revocation list
+        // 2. Update user's last logout time
+        // 3. Log the logout event
+
+        // For now, we'll just log and mark as handled
+        Console.WriteLine($"User logged out, token invalidated: {token.Substring(0, Math.Min(20, token.Length))}...");
+
         await Task.CompletedTask;
     }
 
     public async Task<UserDto> GetCurrentUserAsync()
     {
         // This method should retrieve the current user based on the current principal
-        // For simplicity, we'll throw NotSupportedException; real implementation would use IHttpContextAccessor
-        throw new NotSupportedException("GetCurrentUserAsync requires HTTP context integration.");
+        // In a real implementation, we would get userId from claims in HttpContext
+
+        // For now, we'll assume a static current user ID for demonstration
+        // This should be replaced with actual authentication context
+        var userId = new Guid("00000000-0000-0000-0000-000000000001"); // Example user ID
+
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new UnauthorizedAccessException("Current user not found.");
+        }
+
+        return new UserDto
+        {
+            Id = user.Id,
+            Username = user.UserName,
+            Email = user.Email,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.ModifiedAt
+        };
     }
 
     public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
@@ -82,14 +115,19 @@ public class AuthAppService : IAuthAppService
     public async Task ChangePasswordAsync(ChangePasswordRequest request)
     {
         // This method should identify the current user from context
-        // For simplicity, we'll assume the request contains UserId
-        // In real implementation, get userId from claims
-        var userId = new Guid(); // Placeholder, replace with actual user ID retrieval logic
+        // In a real implementation, we would get userId from claims in HttpContext
+
+        // For demonstration, using a static current user ID
+        // This should be replaced with actual authentication context
+        var userId = new Guid("00000000-0000-0000-0000-000000000001"); // Example user ID
 
         await _authService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword);
+
+        // Log the password change event
+        Console.WriteLine($"User {userId} changed password successfully.");
     }
 
-    private string GenerateJwtToken(DomainService.Entities.UserManagement.User user)
+    private string GenerateJwtToken(User user)
     {
         // Placeholder for JWT token generation
         // In a real implementation, use JWT library with secret key

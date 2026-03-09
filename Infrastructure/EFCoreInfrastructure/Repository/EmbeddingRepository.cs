@@ -2,15 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DomainService.Entities.Core;using DomainService.Entities.KnowledgeManagement;using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
-using DomainService.ServiceContract.Repositories;
+using DomainService.Entities.Enums;
+using DomainService.Entities.VectorSearch;
+using DomainService.ServiceContract.CrossCutting;
 using Microsoft.EntityFrameworkCore;
 using Pgvector;
 using Pgvector.EntityFrameworkCore;
 
 namespace EFCoreInfrastructure.Repository;
 
-public class EmbeddingRepository : RepositoryBase<Embedding>, IEmbeddingRepository
+/// <summary>
+/// 向量存储服务实现，使用EF Core和pgvector进行向量存储和相似性搜索
+/// 作为基础设施层服务，不属于领域层仓储模式
+/// </summary>
+public class EmbeddingRepository : RepositoryBase<Embedding>, IVectorStore
 {
     public EmbeddingRepository(RagDbContext context) : base(context)
     {
@@ -21,13 +26,93 @@ public class EmbeddingRepository : RepositoryBase<Embedding>, IEmbeddingReposito
         return await _dbSet.FirstOrDefaultAsync(e => e.ChunkId == chunkId);
     }
 
-    public async Task<IEnumerable<Embedding>> SearchSimilarAsync(Vector queryVector, int limit)
+    public async Task<IEnumerable<Embedding>> SearchSimilarAsync(Vector queryVector, int limit, DistanceMetric metric = DistanceMetric.L2)
     {
-        // Use pgvector similarity search via EF.Functions.L2Distance (Euclidean distance)
-        // Note: Cosine distance may not be available; using L2 distance as fallback
+        return metric switch
+        {
+            DistanceMetric.L2 => await SearchByL2Distance(queryVector, limit),
+            DistanceMetric.Cosine => await SearchByCosineDistance(queryVector, limit),
+            DistanceMetric.InnerProduct => throw new NotSupportedException("pgvector目前不支持InnerProduct距离度量，请使用L2或Cosine距离"),
+            _ => throw new ArgumentException($"不支持的度量标准: {metric}")
+        };
+    }
+
+    private async Task<IEnumerable<Embedding>> SearchByL2Distance(Vector queryVector, int limit)
+    {
         return await _dbSet
             .OrderBy(e => e.Vector.L2Distance(queryVector))
             .Take(limit)
             .ToListAsync();
+    }
+
+    private async Task<IEnumerable<Embedding>> SearchByCosineDistance(Vector queryVector, int limit)
+    {
+        return await _dbSet
+            .OrderBy(e => e.Vector.CosineDistance(queryVector))
+            .Take(limit)
+            .ToListAsync();
+    }
+
+    public async Task DeleteByChunkIdAsync(Guid chunkId)
+    {
+        var embedding = await GetByChunkIdAsync(chunkId);
+        if (embedding != null)
+        {
+            await DeleteAsync(embedding);
+        }
+    }
+
+    public new async Task AddAsync(Embedding embedding)
+    {
+        await _dbSet.AddAsync(embedding);
+        await SaveChangesAsync();
+    }
+
+    public new async Task AddRangeAsync(IEnumerable<Embedding> embeddings)
+    {
+        await _dbSet.AddRangeAsync(embeddings);
+        await SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Embedding>> SearchSimilarWithFilterAsync(
+        Vector queryVector,
+        int limit,
+        DistanceMetric metric = DistanceMetric.L2,
+        Guid? knowledgeBaseId = null,
+        Guid? documentId = null)
+    {
+        var query = _dbSet.AsQueryable();
+
+        // 应用过滤条件
+        if (knowledgeBaseId.HasValue)
+        {
+            // 通过Chunk->Document->KnowledgeBase进行过滤
+            query = query
+                .Include(e => e.Chunk)
+                .ThenInclude(c => c.Document)
+                .Where(e => e.Chunk.Document.KnowledgeBaseId == knowledgeBaseId.Value);
+        }
+
+        if (documentId.HasValue)
+        {
+            query = query
+                .Include(e => e.Chunk)
+                .Where(e => e.Chunk.DocumentId == documentId.Value);
+        }
+
+        // 根据度量标准执行向量相似度搜索
+        return metric switch
+        {
+            DistanceMetric.L2 => await query
+                .OrderBy(e => e.Vector.L2Distance(queryVector))
+                .Take(limit)
+                .ToListAsync(),
+            DistanceMetric.Cosine => await query
+                .OrderBy(e => e.Vector.CosineDistance(queryVector))
+                .Take(limit)
+                .ToListAsync(),
+            DistanceMetric.InnerProduct => throw new NotSupportedException("pgvector目前不支持InnerProduct距离度量，请使用L2或Cosine距离"),
+            _ => throw new ArgumentException($"不支持的度量标准: {metric}")
+        };
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Application.QueryServices;
-using DomainService.Entities.Core;using DomainService.Entities.KnowledgeManagement;using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
+using DomainService.Entities.VectorSearch;
 using Microsoft.EntityFrameworkCore;
 using Pgvector;
 using Pgvector.EntityFrameworkCore;
@@ -11,12 +11,12 @@ using Pgvector.EntityFrameworkCore;
 namespace EFCoreInfrastructure.QueryServices;
 
 /// <summary>
-/// 嵌入向量查询服务实现
+/// 向量搜索查询服务实现
 /// 负责向量检索相关的复杂查询操作
 /// </summary>
-public class EmbeddingQueryService : QueryServiceBase<Embedding>, IEmbeddingQueryService
+public class VectorSearchQueryService : QueryServiceBase<Embedding>, IVectorSearchQueryService
 {
-    public EmbeddingQueryService(RagDbContext context) : base(context)
+    public VectorSearchQueryService(RagDbContext context) : base(context)
     {
     }
 

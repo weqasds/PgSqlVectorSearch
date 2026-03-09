@@ -34,4 +34,29 @@ public class KnowledgeBaseRepository : RepositoryBase<KnowledgeBase>, IKnowledge
             .Where(joined => joined.doc.KnowledgeBaseId == knowledgeBaseId)
             .CountAsync();
     }
+
+    public async Task<KnowledgeBase> GetKnowledgeBaseWithUserAccessesAsync(Guid knowledgeBaseId)
+    {
+        return await _dbSet
+            .Include(kb => kb.UserAccesses)
+                .ThenInclude(ua => ua.User)
+            .FirstOrDefaultAsync(kb => kb.Id == knowledgeBaseId)
+            .ContinueWith(task =>
+            {
+                var kb = task.Result;
+                if (kb == null)
+                    throw new KeyNotFoundException($"未找到ID为{knowledgeBaseId}的知识库");
+                return kb;
+            });
+    }
+
+    public async Task<IEnumerable<UserKnowledgeBase>> GetKnowledgeBaseUserAccessesAsync(Guid knowledgeBaseId)
+    {
+        return await _context.UserKnowledgeBases
+            .Include(ukb => ukb.User)
+            .Where(ukb => ukb.KnowledgeBaseId == knowledgeBaseId)
+            .ToListAsync();
+    }
+
+
 }

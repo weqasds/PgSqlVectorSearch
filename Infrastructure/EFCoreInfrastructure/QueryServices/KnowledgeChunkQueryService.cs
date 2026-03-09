@@ -12,7 +12,8 @@ namespace EFCoreInfrastructure.QueryServices;
 /// 知识块查询服务实现
 /// 负责知识块相关的复杂查询操作
 /// </summary>
-public class KnowledgeChunkQueryService : QueryServiceBase<KnowledgeChunk>, IKnowledgeChunkQueryService
+public class KnowledgeChunkQueryService : QueryServiceBase<KnowledgeChunk>,
+                                          IKnowledgeChunkQueryService
 {
     public KnowledgeChunkQueryService(RagDbContext context) : base(context)
     {

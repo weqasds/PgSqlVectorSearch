@@ -13,20 +13,17 @@ public class DocumentProcessingService : IDocumentProcessingService
 {
     private readonly IKnowledgeBaseRepository _knowledgeBaseRepository;
     private readonly IKnowledgeDocumentRepository _knowledgeDocumentRepository;
-    private readonly IKnowledgeChunkRepository _knowledgeChunkRepository;
     private readonly IFileStorageService _fileStorageService;
     private readonly ITaskQueueService _taskQueueService;
 
     public DocumentProcessingService(
         IKnowledgeBaseRepository knowledgeBaseRepository,
         IKnowledgeDocumentRepository knowledgeDocumentRepository,
-        IKnowledgeChunkRepository knowledgeChunkRepository,
         IFileStorageService fileStorageService,
         ITaskQueueService taskQueueService)
     {
         _knowledgeBaseRepository = knowledgeBaseRepository;
         _knowledgeDocumentRepository = knowledgeDocumentRepository;
-        _knowledgeChunkRepository = knowledgeChunkRepository;
         _fileStorageService = fileStorageService;
         _taskQueueService = taskQueueService;
     }
@@ -42,14 +39,14 @@ public class DocumentProcessingService : IDocumentProcessingService
         var fileId = await _fileStorageService.UploadFileAsync(fileStream, fileName, "application/octet-stream");
 
         // 创建文档记录
-        var document = new KnowledgeDocument
-        {
-            Id = Guid.NewGuid(),
-            KnowledgeBaseId = knowledgeBaseId,
-            FileName = fileName,
-            CreatedAt = DateTime.UtcNow,
-            IsDeleted = false
-        };
+        var document =  KnowledgeDocument.Create(
+            knowledgeBaseId: knowledgeBaseId,
+            fileName: fileName,
+            filePath: fileId, // 存储服务返回的文件ID或路径
+            fileSize: fileStream.Length,
+            contentType: "application/octet-stream",
+            fileHash: null // 可选：计算文件哈希值以防止重复上传
+        );
 
         await _knowledgeDocumentRepository.AddAsync(document);
 
@@ -73,20 +70,36 @@ public class DocumentProcessingService : IDocumentProcessingService
         // 5. 保存分块和向量到数据库
 
         // 临时实现：创建示例分块
-        var sampleChunk = new KnowledgeChunk
-        {
-            Id = Guid.NewGuid(),
-            DocumentId = documentId,
-            ChunkIndex = 0,
-            Content = $"这是文档 '{document.FileName}' 的示例分块内容。",
-            CreatedAt = DateTime.UtcNow,
-            IsDeleted = false
-        };
+        var sampleChunk = document.AddChunk($"这是文档 '{document.FileName}' 的示例分块内容。", 0);
 
-        await _knowledgeChunkRepository.AddAsync(sampleChunk);
+        // 更新文档状态为已处理
+        document.MarkAsProcessed(1); // 假设处理了1个块
+
+        // 保存文档变更（包括新知识块）
+        await _knowledgeDocumentRepository.UpdateAsync(document);
 
         // 异步触发向量生成任务
         await _taskQueueService.EnqueueVectorGenerationAsync(sampleChunk.Id);
+    }
+
+    public async Task<KnowledgeDocument?> FindDuplicateDocumentAsync(Guid knowledgeBaseId, string fileHash)
+    {
+        if (string.IsNullOrWhiteSpace(fileHash))
+            throw new ArgumentException("文件哈希不能为空", nameof(fileHash));
+
+        // 获取知识库中的所有文档
+        var documents = await _knowledgeDocumentRepository.GetByKnowledgeBaseIdAsync(knowledgeBaseId);
+
+        // 查找具有相同文件哈希且未删除的文档
+        foreach (var document in documents)
+        {
+            if (!document.IsDeleted && document.FileHash == fileHash)
+            {
+                return document;
+            }
+        }
+
+        return null;
     }
 
     public async Task<IEnumerable<KnowledgeChunk>> GetDocumentChunksAsync(Guid documentId)
@@ -95,10 +108,13 @@ public class DocumentProcessingService : IDocumentProcessingService
         if (document == null || document.IsDeleted)
             throw new KeyNotFoundException($"未找到ID为 {documentId} 的文档");
 
-        var chunks = await _knowledgeChunkRepository.GetByDocumentIdAsync(documentId);
+        // 通过聚合根文档获取知识块
+        if (document.Chunks == null)
+            return Enumerable.Empty<KnowledgeChunk>();
+
         var activeChunks = new List<KnowledgeChunk>();
 
-        foreach (var chunk in chunks)
+        foreach (var chunk in document.Chunks)
         {
             if (!chunk.IsDeleted)
                 activeChunks.Add(chunk);
