@@ -1,22 +1,15 @@
+using Application.Extensions;
+using DomainService.Extension;
+using DomainService.ServiceContract.CrossCutting;
+using EFCoreInfrastructure;
+using EFCoreInfrastructure.Extensions;
+using Infrastructure.SemanticKernelAI.Extensions;
+using InfrastructureShared.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Application.ApplicationService;
-using Application.ApplicationServiceContract;
-using Application.QueryServices;
-using DomainService.ServiceContract.CrossCutting;
-using DomainService.Services.RAG;
-using DomainService.ServiceContract.Repositories;
-using DomainService.ServiceContract.Services;
-using DomainService.Services.Auth;
-using InfrastructureShared.Services;
-using DomainService.Services.VectorRetrieval;
-using EFCoreInfrastructure;
-using EFCoreInfrastructure.QueryServices;
-using EFCoreInfrastructure.Repository;
-using Infrastructure.SemanticKernelAI.Services;
 using PgSqlVectorSearch.Middleware;
+using System.Text;
 
 namespace PgSqlVectorSearch;
 
@@ -62,41 +55,17 @@ public class Program
                 ClockSkew = TimeSpan.FromSeconds(jwtSettings.ClockSkewSeconds)
             };
         });
-
-        // 3. QueryService注册（CQRS查询服务）
-        builder.Services.AddScoped(typeof(IQueryService<>), typeof(QueryServiceBase<>));
-        builder.Services.AddScoped<IVectorSearchQueryService, VectorSearchQueryService>();
-        // 注意：IKnowledgeBaseQueryService和IKnowledgeChunkQueryService的实现可能在其他项目中
-
-        // 3. 仓储接口注册
-        builder.Services.AddScoped(typeof(IRepository<>), typeof(RepositoryBase<>));
-
-        // 4. 认证相关服务注册
-        builder.Services.AddHttpContextAccessor();
-        builder.Services.AddScoped<ITokenService, JwtTokenService>();
-        builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-        builder.Services.AddScoped<IAuthService, AuthService>();
-
-        // 5. 向量检索相关服务注册
-        builder.Services.AddScoped<IVectorStore, EmbeddingRepository>();
-        builder.Services.AddScoped<IEmbeddingService, OpenAIEmbeddingService>();
-        builder.Services.AddScoped<IVectorRetrievalService, VectorRetrievalService>();
-
-        // 6. 系统监控服务注册
-        builder.Services.AddScoped<ISystemMetricsCollector, SystemMetricsCollector>();
-
-        // 7. RAG仓储注册
-        builder.Services.AddScoped<IRagGenerationRepository, RagGenerationRepository>();
-        builder.Services.AddScoped<IRagRetrievalLogRepository, RagRetrievalLogRepository>();
-
-        // 8. 应用服务注册
-        builder.Services.AddScoped<ISystemAdminAppService, SystemAdminAppService>();
-        builder.Services.AddScoped<IAuthAppService, AuthAppService>();
-        builder.Services.AddScoped<IUserAppService, UserAppService>();
-        builder.Services.AddScoped<IRagChatAppService, RagChatAppService>();
-
-        // 9. 领域服务注册
-        builder.Services.AddScoped<IRagGenerationService, RagGenerationService>();
+        #region 基础设施层服务注册
+        builder.Services.AddInfrastructureSharedServices();
+        builder.Services.AddEFCoreInfrastructureServices();
+        builder.Services.AddSemanticKernelAIServices();
+        #endregion
+        #region 领域层服务注册
+        builder.Services.AddDomainServices();
+        #endregion
+        #region 应用层服务注册
+        builder.Services.AddApplicationServices();
+        #endregion
 
         // 10. 授权策略
         builder.Services.AddAuthorization(options =>

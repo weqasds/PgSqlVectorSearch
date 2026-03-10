@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "X/V7uuk/Mv4=",
+  "dgSpecHash": "EG/CjyvbTwc=",
   "success": true,
   "projectFilePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
   "expectedPackageFiles": [
@@ -17,7 +17,6 @@
     "D:\\source\\packages\\microsoft.extensions.ai\\10.3.0\\microsoft.extensions.ai.10.3.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.extensions.ai.abstractions\\10.3.0\\microsoft.extensions.ai.abstractions.10.3.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.extensions.ai.openai\\10.3.0\\microsoft.extensions.ai.openai.10.3.0.nupkg.sha512",
-    "D:\\source\\packages\\microsoft.extensions.dependencyinjection\\10.0.3\\microsoft.extensions.dependencyinjection.10.0.3.nupkg.sha512",
     "D:\\source\\packages\\microsoft.extensions.vectordata.abstractions\\10.0.1\\microsoft.extensions.vectordata.abstractions.10.0.1.nupkg.sha512",
     "D:\\source\\packages\\microsoft.identitymodel.abstractions\\8.6.0\\microsoft.identitymodel.abstractions.8.6.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.identitymodel.jsonwebtokens\\8.6.0\\microsoft.identitymodel.jsonwebtokens.8.6.0.nupkg.sha512",
@@ -47,18 +46,5 @@
     "D:\\source\\packages\\system.numerics.tensors\\10.0.3\\system.numerics.tensors.10.0.3.nupkg.sha512",
     "D:\\source\\packages\\system.security.cryptography.protecteddata\\8.0.0\\system.security.cryptography.protecteddata.8.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1510",
-      "level": "Warning",
-      "message": "PackageReference Microsoft.Extensions.DependencyInjection 将不会删除。请考虑从依赖项中移除此包，因为可能不需要它。",
-      "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
-      "warningLevel": 1,
-      "filePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
-      "libraryId": "Microsoft.Extensions.DependencyInjection",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  "logs": []
 }

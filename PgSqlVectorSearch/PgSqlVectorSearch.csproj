@@ -18,7 +18,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.73.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
@@ -26,6 +25,8 @@
 
   <ItemGroup>
     <Folder Include="Controllers\" />
+    <Folder Include="Extension\" />
+    <Folder Include="Middleware\" />
   </ItemGroup>
 
   <ItemGroup>

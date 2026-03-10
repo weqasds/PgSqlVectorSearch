@@ -17,5 +17,9 @@
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
     <PackageReference Include="System.Management" Version="9.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Extension\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
 
 </Project>

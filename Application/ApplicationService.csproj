@@ -10,6 +10,7 @@
     <Folder Include="ApplicationService\" />
     <Folder Include="ApplicationServiceContract\" />
     <Folder Include="Dto\" />
+    <Folder Include="Extension\" />
   </ItemGroup>
 
   <ItemGroup>

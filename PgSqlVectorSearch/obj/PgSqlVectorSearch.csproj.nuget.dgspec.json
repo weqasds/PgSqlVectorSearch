@@ -1840,10 +1840,6 @@
               "target": "Package",
               "version": "[10.0.2, )"
             },
-            "Microsoft.Extensions.DependencyInjection": {
-              "target": "Package",
-              "version": "[10.0.3, )"
-            },
             "Microsoft.SemanticKernel": {
               "target": "Package",
               "version": "[1.73.0, )"

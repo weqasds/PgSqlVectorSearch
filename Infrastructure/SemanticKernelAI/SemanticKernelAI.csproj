@@ -10,6 +10,10 @@
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.73.0" />
     <PackageReference Include="Pgvector" Version="0.3.2" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\" />
+    <Folder Include="Extension\" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\DomainService\DomainService.csproj" />
