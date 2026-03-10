@@ -17,19 +17,78 @@ using DomainService.Entities.RAG;
 using DomainService.Entities.Analytics;
 public class RagDbContext : DbContext
 {
+    #region 聚合根实体的dbset
+
+    /// <summary>
+    /// 用户表，包含用户的基本信息和与聊天会话、知识关系等的关联
+    /// </summary>
     public DbSet<User> Users { get; set; }
+    /// <summary>
+    /// 聊天会话表，包含聊天会话的基本信息和与聊天消息的关联
+    /// </summary>
     public DbSet<ChatSession> ChatSessions { get; set; }
-    public DbSet<ChatMessage> ChatMessages { get; set; }
+    /// <summary>
+    /// 知识库表，包含知识库的基本信息
+    /// </summary>
     public DbSet<KnowledgeBase> KnowledgeBases { get; set; }
+    /// <summary>
+    /// 知识文档表，包含知识文档的基本信息
+    /// </summary>
     public DbSet<KnowledgeDocument> KnowledgeDocuments { get; set; }
-    public DbSet<KnowledgeChunk> KnowledgeChunks { get; set; }
-    public DbSet<Embedding> Embeddings { get; set; }
-    public DbSet<RagGeneration> RagGenerations { get; set; }
-    public DbSet<RagRetrievalLog> RagRetrievalLogs { get; set; }
-    public DbSet<KnowledgeRelation> KnowledgeRelations { get; set; }
-    public DbSet<UserKnowledgeBase> UserKnowledgeBases { get; set; }
+    /// <summary>
+    /// 图节点表，包含图结构中的节点信息
+    /// </summary>
     public DbSet<GraphNode> GraphNodes { get; set; }
+
+    #endregion
+    
+    #region 其他实体的dbset
+    /// <summary>
+    /// RAG检索日志表，包含RAG检索的日志信息
+    /// </summary>
+    public DbSet<RagRetrievalLog> RagRetrievalLogs { get; set; }
+    /// <summary>
+    /// 知识关系表，包含知识之间的关系信息
+    /// </summary>
+    public DbSet<KnowledgeRelation> KnowledgeRelations { get; set; }
+    /// <summary>
+    /// 用户知识库表，包含用户与知识库的关联信息
+    /// </summary>
+    public DbSet<UserKnowledgeBase> UserKnowledgeBases { get; set; }
+    
+    /// <summary>
+    /// 图边表，包含图结构中的边信息
+    /// </summary>
     public DbSet<GraphEdge> GraphEdges { get; set; }
+    /// <summary>
+    /// 聊天消息表，包含聊天消息的基本信息
+    /// </summary>
+    public DbSet<ChatMessage> ChatMessages { get; set; }
+    /// <summary>
+    /// 知识块表，包含知识块的基本信息
+    /// </summary>
+    public DbSet<KnowledgeChunk> KnowledgeChunks { get; set; }
+    /// <summary>
+    /// 嵌入表，包含向量嵌入的基本信息
+    /// </summary>
+    public DbSet<Embedding> Embeddings { get; set; }
+
+    #endregion
+    
+    #region 系统实体的dbset，特殊聚合根
+
+    /// <summary>
+    /// RAG生成表，包含RAG生成的基本信息
+    /// </summary>
+    public DbSet<RagGeneration> RagGenerations { get; set; }
+    /// <summary>
+    /// 审计日志表，包含系统审计日志的基本信息
+    /// </summary>
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
+
+    #endregion
+    
     /// <summary>
     /// Configures conventions for the model by customizing the provided configuration builder.
     /// </summary>
@@ -70,95 +129,32 @@ public class RagDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("vector");
+        #region 系统实体的配置(特殊聚合根)
 
-        modelBuilder.Entity<ChatMessage>(entity =>
+        modelBuilder.Entity<RagGeneration>(entity =>
         {
-            entity.ToTable("chat_message");
+            entity.ToTable("rag_generation");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Content).
-                IsRequired();
+            entity.Property(x => x.Prompt).IsRequired();
+            entity.Property(x => x.Answer).IsRequired();
             entity.HasOne(x => x.ChatSession)
-            .WithMany(x => x.Messages)
-            .HasForeignKey(x => x.ChatSessionId)
-            .OnDelete(DeleteBehavior.Cascade);
-            entity.Property(x=>x.Role).HasColumnType("chat_role");
+                .WithMany()
+                .HasForeignKey(x => x.ChatSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(x => x.ChatSessionId);
-            entity.HasIndex(x => x.CreatedAt);
         });
-        modelBuilder.Entity<ChatSession>(entity =>
+        modelBuilder.Entity<AuditLog>(entity =>
         {
-            entity.ToTable("chat_session");
+            entity.ToTable("audit_log");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.ChatTitle).IsRequired();
-            entity.HasOne(x => x.User)
-                .WithMany(x => x.ChatSessions)
-                .HasForeignKey(x => x.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(x => x.UserId);
-            entity.HasIndex(x => x.CreatedAt);
-
-            // 与KnowledgeBase的关系（一对多）
-            entity.HasOne(x => x.KnowledgeBase)
-                .WithMany(x => x.ChatSessions)
-                .HasForeignKey(x => x.KnowledgeBaseId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // ReferencedKnowledgeBaseIds字段配置
-            entity.Property(x => x.ReferencedKnowledgeBaseIds)
-                .IsRequired(false);
-
-            entity.HasIndex(x => x.KnowledgeBaseId);
+            entity.Property(x => x.Operation).IsRequired(true);
+            entity.Property(x => x.UserId).IsRequired(true);
+            entity.Property(x => x.Details).IsRequired(true);
         });
-        modelBuilder.Entity<Embedding>(entity =>
-        {
-            entity.ToTable("embedding");
-            entity.HasKey(x => x.Id);
-            entity.Property(x => x.Vector).
-                HasColumnType("vector(1536)").
-                IsRequired();
-            entity.HasOne(x => x.Chunk)
-                .WithMany()
-                .HasForeignKey(x => x.ChunkId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(x => x.ChunkId).IsUnique();
-        });
-        modelBuilder.Entity<KnowledgeBase>(entity =>
-        {
-            entity.ToTable("knowledge_base");
-            entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(100);
-            entity.HasIndex(x => x.Name).IsUnique();
-            entity.Property(x => x.Description).IsRequired();
-            entity.Property(x => x.IsPublic).IsRequired().HasDefaultValue(false);
 
-            // 与所有者的关系（可为空）
-            entity.HasOne(x => x.Owner)
-                .WithMany()
-                .HasForeignKey(x => x.OwnerId)
-                .OnDelete(DeleteBehavior.SetNull);
+        #endregion
+        #region 聚合根实体的配置
 
-            // 与用户访问权限的关系
-            entity.HasMany(x => x.UserAccesses)
-                .WithOne(x => x.KnowledgeBase)
-                .HasForeignKey(x => x.KnowledgeBaseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(x => x.OwnerId);
-            entity.HasIndex(x => x.IsPublic);
-        });
-        modelBuilder.Entity<KnowledgeChunk>(entity =>
-        {
-            entity.ToTable("knowledge_chunk");
-            entity.HasKey(x => x.Id);
-            entity.Property(x => x.Content).IsRequired();
-            entity.Property(x => x.ChunkIndex).IsRequired();
-            entity.HasOne(x => x.Document)
-                .WithMany()
-                .HasForeignKey(x => x.DocumentId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(x => new { x.DocumentId, x.ChunkIndex }).IsUnique();
-            entity.HasIndex(x => x.DocumentId);
-        });
         modelBuilder.Entity<KnowledgeDocument>(entity =>
         {
             entity.ToTable("knowledge_document");
@@ -199,17 +195,142 @@ public class RagDbContext : DbContext
             entity.HasIndex(x => x.KnowledgeBaseId);
             entity.HasIndex(x => x.FileHash);
         });
-        modelBuilder.Entity<RagGeneration>(entity =>
+        modelBuilder.Entity<ChatSession>(entity =>
         {
-            entity.ToTable("rag_generation");
+            entity.ToTable("chat_session");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Prompt).IsRequired();
-            entity.Property(x => x.Answer).IsRequired();
-            entity.HasOne(x => x.ChatSession)
-                .WithMany()
-                .HasForeignKey(x => x.ChatSessionId)
+            entity.Property(x => x.ChatTitle).IsRequired();
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.ChatSessions)
+                .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => x.UserId);
+            entity.HasIndex(x => x.CreatedAt);
+
+            // 与KnowledgeBase的关系（一对多）
+            entity.HasOne(x => x.KnowledgeBase)
+                .WithMany(x => x.ChatSessions)
+                .HasForeignKey(x => x.KnowledgeBaseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ReferencedKnowledgeBaseIds字段配置
+            entity.Property(x => x.ReferencedKnowledgeBaseIds)
+                .IsRequired(false);
+
+            entity.HasIndex(x => x.KnowledgeBaseId);
+        });
+        modelBuilder.Entity<KnowledgeBase>(entity =>
+        {
+            entity.ToTable("knowledge_base");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            entity.HasIndex(x => x.Name).IsUnique();
+            entity.Property(x => x.Description).IsRequired();
+            entity.Property(x => x.IsPublic).IsRequired().HasDefaultValue(false);
+
+            // 与所有者的关系（可为空）
+            entity.HasOne(x => x.Owner)
+                .WithMany()
+                .HasForeignKey(x => x.OwnerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // 与用户访问权限的关系
+            entity.HasMany(x => x.UserAccesses)
+                .WithOne(x => x.KnowledgeBase)
+                .HasForeignKey(x => x.KnowledgeBaseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => x.OwnerId);
+            entity.HasIndex(x => x.IsPublic);
+        });
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("user");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.UserName).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.Email).IsRequired();
+            entity.Property(x => x.PasswordHash).IsRequired();
+
+            // 与可访问知识库的关系
+            entity.HasMany(x => x.AccessibleKnowledgeBases)
+                .WithOne(x => x.User)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        // GraphNode实体配置
+        modelBuilder.Entity<GraphNode>(entity =>
+        {
+            entity.ToTable("graph_node");
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.EntityType)
+                .HasColumnType("entity_type")
+                .IsRequired();
+
+            entity.Property(x => x.PositionX)
+                .IsRequired()
+                .HasDefaultValue(0f);
+
+            entity.Property(x => x.PositionY)
+                .IsRequired()
+                .HasDefaultValue(0f);
+
+            entity.Property(x => x.Label)
+                .IsRequired(false)
+                .HasMaxLength(200);
+
+            entity.Property(x => x.Properties)
+                .IsRequired(false);
+
+            // 索引
+            entity.HasIndex(x => new { x.EntityId, x.EntityType })
+                .IsUnique();
+            entity.HasIndex(x => x.EntityType);
+        });
+
+        #endregion
+
+        #region 其他实体的配置
+        
+        modelBuilder.Entity<ChatMessage>(entity =>
+        {
+            entity.ToTable("chat_message");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Content).
+                IsRequired();
+            entity.HasOne(x => x.ChatSession)
+            .WithMany(x => x.Messages)
+            .HasForeignKey(x => x.ChatSessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(x=>x.Role).HasColumnType("chat_role");
             entity.HasIndex(x => x.ChatSessionId);
+            entity.HasIndex(x => x.CreatedAt);
+        });
+        modelBuilder.Entity<Embedding>(entity =>
+        {
+            entity.ToTable("embedding");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Vector).
+                HasColumnType("vector(1536)").
+                IsRequired();
+            entity.HasOne(x => x.Chunk)
+                .WithMany()
+                .HasForeignKey(x => x.ChunkId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => x.ChunkId).IsUnique();
+        });
+        modelBuilder.Entity<KnowledgeChunk>(entity =>
+        {
+            entity.ToTable("knowledge_chunk");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Content).IsRequired();
+            entity.Property(x => x.ChunkIndex).IsRequired();
+            entity.HasOne(x => x.Document)
+                .WithMany()
+                .HasForeignKey(x => x.DocumentId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => new { x.DocumentId, x.ChunkIndex }).IsUnique();
+            entity.HasIndex(x => x.DocumentId);
         });
         modelBuilder.Entity<RagRetrievalLog>(entity =>
         {
@@ -227,21 +348,6 @@ public class RagDbContext : DbContext
             entity.HasIndex(x => x.RagGenerationId);
             entity.HasIndex(x => x.ChunkId);
         });
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.ToTable("user");
-            entity.HasKey(x => x.Id);
-            entity.Property(x => x.UserName).HasMaxLength(20).IsRequired();
-            entity.Property(x => x.Email).IsRequired();
-            entity.Property(x => x.PasswordHash).IsRequired();
-
-            // 与可访问知识库的关系
-            entity.HasMany(x => x.AccessibleKnowledgeBases)
-                .WithOne(x => x.User)
-                .HasForeignKey(x => x.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
         // UserKnowledgeBase实体配置（用户与知识库的多对多关系）
         modelBuilder.Entity<UserKnowledgeBase>(entity =>
         {
@@ -272,9 +378,6 @@ public class RagDbContext : DbContext
             entity.HasIndex(x => x.KnowledgeBaseId);
             entity.HasIndex(x => x.AccessLevel);
         });
-
-
-
         // KnowledgeRelation实体配置
         modelBuilder.Entity<KnowledgeRelation>(entity =>
         {
@@ -318,38 +421,6 @@ public class RagDbContext : DbContext
                 .IsUnique();
             entity.HasIndex(x => x.CreatedBy);
         });
-
-        // GraphNode实体配置
-        modelBuilder.Entity<GraphNode>(entity =>
-        {
-            entity.ToTable("graph_node");
-            entity.HasKey(x => x.Id);
-
-            entity.Property(x => x.EntityType)
-                .HasColumnType("entity_type")
-                .IsRequired();
-
-            entity.Property(x => x.PositionX)
-                .IsRequired()
-                .HasDefaultValue(0f);
-
-            entity.Property(x => x.PositionY)
-                .IsRequired()
-                .HasDefaultValue(0f);
-
-            entity.Property(x => x.Label)
-                .IsRequired(false)
-                .HasMaxLength(200);
-
-            entity.Property(x => x.Properties)
-                .IsRequired(false);
-
-            // 索引
-            entity.HasIndex(x => new { x.EntityId, x.EntityType })
-                .IsUnique();
-            entity.HasIndex(x => x.EntityType);
-        });
-
         // GraphEdge实体配置
         modelBuilder.Entity<GraphEdge>(entity =>
         {
@@ -388,6 +459,8 @@ public class RagDbContext : DbContext
             entity.HasIndex(x => new { x.SourceNodeId, x.TargetNodeId })
                 .IsUnique();
         });
+
+        #endregion
 
         base.OnModelCreating(modelBuilder);
     }

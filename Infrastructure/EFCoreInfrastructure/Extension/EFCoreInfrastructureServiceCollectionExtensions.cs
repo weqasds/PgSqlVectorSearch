@@ -1,5 +1,6 @@
 using Application.QueryServices;
 using DomainService.Entities.VectorSearch;
+using DomainService.ServiceContract.CrossCutting;
 using DomainService.ServiceContract.Repositories;
 using EFCoreInfrastructure.QueryServices;
 using EFCoreInfrastructure.Repository;
@@ -25,8 +26,10 @@ public static class EFCoreInfrastructureServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
         services.AddScoped<IRepository<Embedding>, EmbeddingRepository>();
+        services.AddScoped<IVectorStore, EmbeddingRepository>();
         services.AddScoped<IRagGenerationRepository, RagGenerationRepository>();
         services.AddScoped<IRagRetrievalLogRepository, RagRetrievalLogRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
         // 2. 注册查询服务实现
         services.AddScoped<IQueryService<Embedding>, VectorSearchQueryService>();
@@ -37,3 +40,4 @@ public static class EFCoreInfrastructureServiceCollectionExtensions
         return services;
     }
 }
+

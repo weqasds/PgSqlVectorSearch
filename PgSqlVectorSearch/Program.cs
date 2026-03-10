@@ -28,9 +28,6 @@ public class Program
         builder.Services.Configure<JwtSettings>(jwtSettingsSection);
         var jwtSettings = jwtSettingsSection.Get<JwtSettings>() ?? new JwtSettings();
 
-        // 配置应用服务
-        // Add services to the container.
-
         // 1. DbContext注册
         builder.Services.AddDbContext<RagDbContext>(options =>
             options.UseNpgsql(connectionString));
@@ -55,6 +52,10 @@ public class Program
                 ClockSkew = TimeSpan.FromSeconds(jwtSettings.ClockSkewSeconds)
             };
         });
+
+        // 3. HttpContextAccessor注册(非中间管道代码获取http上下文需要)
+        builder.Services.AddHttpContextAccessor();
+
         #region 基础设施层服务注册
         builder.Services.AddInfrastructureSharedServices();
         builder.Services.AddEFCoreInfrastructureServices();

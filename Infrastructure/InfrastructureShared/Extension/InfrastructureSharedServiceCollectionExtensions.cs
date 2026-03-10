@@ -1,6 +1,6 @@
 using DomainService.ServiceContract.CrossCutting;
-using DomainService.ServiceContract.Services;
 using InfrastructureShared.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace InfrastructureShared.Extensions;
@@ -17,6 +17,7 @@ public static class InfrastructureSharedServiceCollectionExtensions
     /// <returns>服务集合，支持链式调用</returns>
     public static IServiceCollection AddInfrastructureSharedServices(this IServiceCollection services)
     {
+        
         // 1. 注册跨领域服务
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();

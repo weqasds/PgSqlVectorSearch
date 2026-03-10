@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "EG/CjyvbTwc=",
+  "dgSpecHash": "8Keo4sdlBAs=",
   "success": true,
-  "projectFilePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+  "projectFilePath": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
   "expectedPackageFiles": [
     "D:\\source\\packages\\azure.ai.openai\\2.8.0-beta.1\\azure.ai.openai.2.8.0-beta.1.nupkg.sha512",
     "D:\\source\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",

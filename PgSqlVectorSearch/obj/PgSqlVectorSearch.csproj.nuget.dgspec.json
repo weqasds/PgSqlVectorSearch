@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj": {}
+    "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj": {}
   },
   "projects": {
-    "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
+    "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj",
+        "projectUniqueName": "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj",
         "projectName": "ApplicationService",
-        "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj",
+        "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj",
         "packagesPath": "D:\\source\\packages",
-        "outputPath": "D:\\source\\repos\\PgSqlVectorSearch\\Application\\obj\\",
+        "outputPath": "d:\\source\\repos\\PgSqlVectorSearch\\Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -32,8 +32,8 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
               }
             }
           }
@@ -347,14 +347,14 @@
         }
       }
     },
-    "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
+    "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj",
+        "projectUniqueName": "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj",
         "projectName": "DomainService",
-        "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj",
+        "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj",
         "packagesPath": "D:\\source\\packages",
-        "outputPath": "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\obj\\",
+        "outputPath": "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -692,14 +692,14 @@
         }
       }
     },
-    "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj": {
+    "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj",
+        "projectUniqueName": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj",
         "projectName": "EFCoreInfrastructure",
-        "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj",
+        "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj",
         "packagesPath": "D:\\source\\packages",
-        "outputPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\obj\\",
+        "outputPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -720,11 +720,11 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj"
               },
-              "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
               }
             }
           }
@@ -1052,14 +1052,14 @@
         }
       }
     },
-    "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj": {
+    "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj",
+        "projectUniqueName": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj",
         "projectName": "InfrastructureShared",
-        "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj",
+        "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj",
         "packagesPath": "D:\\source\\packages",
-        "outputPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\obj\\",
+        "outputPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1080,11 +1080,11 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj"
               },
-              "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
               }
             }
           }
@@ -1420,14 +1420,14 @@
         }
       }
     },
-    "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj": {
+    "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj",
+        "projectUniqueName": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj",
         "projectName": "SemanticKernelAI",
-        "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj",
+        "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj",
         "packagesPath": "D:\\source\\packages",
-        "outputPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\obj\\",
+        "outputPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1448,8 +1448,8 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
               }
             }
           }
@@ -1773,14 +1773,14 @@
         }
       }
     },
-    "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj": {
+    "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+        "projectUniqueName": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
         "projectName": "PgSqlVectorSearch",
-        "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+        "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
         "packagesPath": "D:\\source\\packages",
-        "outputPath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\obj\\",
+        "outputPath": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1801,17 +1801,17 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj"
               },
-              "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj"
               },
-              "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj"
               },
-              "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj": {
-                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj"
+              "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj": {
+                "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj"
               }
             }
           }

@@ -3,7 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using DomainService.Entities.Core;using DomainService.Entities.KnowledgeManagement;using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
+using DomainService.Entities.Core;
+using DomainService.Entities.KnowledgeManagement;
+using DomainService.Entities.KnowledgeGraph;
+using DomainService.Entities.Enums;
+using DomainService.Entities.VectorSearch;
+using DomainService.Entities.Chat;
+using DomainService.Entities.UserManagement;
+using DomainService.Entities.System;
+using DomainService.Entities.RAG;
+using DomainService.Entities.Analytics;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
 using DomainService.ServiceContract.CrossCutting;
@@ -12,9 +21,9 @@ namespace InfrastructureShared.Services;
 
 public class AuditLogService : IAuditLogService
 {
-    private readonly IRepository<AuditLog> _auditLogRepository;
+    private readonly IAuditLogRepository _auditLogRepository;
 
-    public AuditLogService(IRepository<AuditLog> auditLogRepository)
+    public AuditLogService(IAuditLogRepository auditLogRepository)
     {
         _auditLogRepository = auditLogRepository;
     }
