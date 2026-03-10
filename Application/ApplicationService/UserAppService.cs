@@ -54,7 +54,15 @@ public class UserAppService : IUserAppService
     public async Task<IEnumerable<ChatSessionDto>> GetUserSessionsAsync(Guid userId)
     {
         var sessions = await _chatService.GetUserSessionsAsync(userId);
-        return sessions.Select(MapToSessionDto);
+
+        var sessionDtos = new List<ChatSessionDto>();
+        foreach (var session in sessions)
+        {
+            var dto = await MapToSessionDtoAsync(session);
+            sessionDtos.Add(dto);
+        }
+
+        return sessionDtos;
     }
 
     private UserDto MapToDto(User user)
@@ -69,9 +77,11 @@ public class UserAppService : IUserAppService
         };
     }
 
-    private ChatSessionDto MapToSessionDto(ChatSession session)
+    private async Task<ChatSessionDto> MapToSessionDtoAsync(ChatSession session)
     {
-        // MessageCount could be retrieved from repository; for simplicity we'll set to 0
+        var messages = await _chatService.GetSessionMessagesAsync(session.Id);
+        var count = messages?.Count() ?? 0;
+
         return new ChatSessionDto
         {
             Id = session.Id,
@@ -79,7 +89,7 @@ public class UserAppService : IUserAppService
             Title = session.ChatTitle,
             CreatedAt = session.CreatedAt,
             LastActivityAt = session.ModifiedAt, // Placeholder for last activity time, replace with actual field if available
-            MessageCount = 0
+            MessageCount = count
         };
     }
 }

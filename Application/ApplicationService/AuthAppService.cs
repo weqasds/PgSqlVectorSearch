@@ -15,11 +15,19 @@ public class AuthAppService : IAuthAppService
 {
     private readonly IAuthService _authService;
     private readonly IUserRepository _userRepository;
+    private readonly ITokenService _tokenService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public AuthAppService(IAuthService authService, IUserRepository userRepository)
+    public AuthAppService(
+        IAuthService authService,
+        IUserRepository userRepository,
+        ITokenService tokenService,
+        ICurrentUserService currentUserService)
     {
         _authService = authService;
         _userRepository = userRepository;
+        _tokenService = tokenService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -31,11 +39,8 @@ public class AuthAppService : IAuthAppService
             throw new UnauthorizedAccessException("Invalid username or password.");
         }
 
-        // Generate token (in a real implementation, this would be done by the auth service)
-        // For now, we'll assume the auth service returns a user with a token property
-        // or we need to generate a JWT token.
-        // Since the domain service doesn't return a token, we'll simulate one.
-        var token = GenerateJwtToken(user);
+        // Generate JWT token using TokenService
+        var token = _tokenService.GenerateAccessToken(user);
 
         return new LoginResponse
         {
@@ -74,14 +79,14 @@ public class AuthAppService : IAuthAppService
 
     public async Task<UserDto> GetCurrentUserAsync()
     {
-        // This method should retrieve the current user based on the current principal
-        // In a real implementation, we would get userId from claims in HttpContext
+        // Get current user ID from authentication context
+        var userId = _currentUserService.GetCurrentUserId();
+        if (!userId.HasValue)
+        {
+            throw new UnauthorizedAccessException("User is not authenticated.");
+        }
 
-        // For now, we'll assume a static current user ID for demonstration
-        // This should be replaced with actual authentication context
-        var userId = new Guid("00000000-0000-0000-0000-000000000001"); // Example user ID
-
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(userId.Value);
         if (user == null)
         {
             throw new UnauthorizedAccessException("Current user not found.");
@@ -102,35 +107,38 @@ public class AuthAppService : IAuthAppService
         // Register user via domain service
         var user = await _authService.RegisterAsync(request.Username, request.Email, request.Password);
 
-        // Generate token for new user
-        var token = GenerateJwtToken(user);
+        // Generate JWT token for new user
+        var token = _tokenService.GenerateAccessToken(user);
 
         return new RegisterResponse
         {
             Success = true,
             Message = "Registration successful.",
+            Token = token,
+            User = new UserDto
+            {
+                Id = user.Id,
+                Username = user.UserName,
+                Email = user.Email,
+                CreatedAt = user.CreatedAt,
+                LastLoginAt = user.ModifiedAt
+            }
         };
     }
 
     public async Task ChangePasswordAsync(ChangePasswordRequest request)
     {
-        // This method should identify the current user from context
-        // In a real implementation, we would get userId from claims in HttpContext
+        // Get current user ID from authentication context
+        var userId = _currentUserService.GetCurrentUserId();
+        if (!userId.HasValue)
+        {
+            throw new UnauthorizedAccessException("User is not authenticated.");
+        }
 
-        // For demonstration, using a static current user ID
-        // This should be replaced with actual authentication context
-        var userId = new Guid("00000000-0000-0000-0000-000000000001"); // Example user ID
-
-        await _authService.ChangePasswordAsync(userId, request.OldPassword, request.NewPassword);
+        await _authService.ChangePasswordAsync(userId.Value, request.OldPassword, request.NewPassword);
 
         // Log the password change event
         Console.WriteLine($"User {userId} changed password successfully.");
     }
 
-    private string GenerateJwtToken(User user)
-    {
-        // Placeholder for JWT token generation
-        // In a real implementation, use JWT library with secret key
-        return $"fake-jwt-token-for-{user.Id}";
-    }
 }

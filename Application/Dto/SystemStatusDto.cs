@@ -14,5 +14,8 @@ public class SystemLoad
 {
     public double CpuUsage { get; set; }
     public double MemoryUsage { get; set; }
+    public double DiskUsage { get; set; }
     public int ActiveThreads { get; set; }
+    public TimeSpan SystemUptime { get; set; }
+    public TimeSpan ApplicationUptime { get; set; }
 }

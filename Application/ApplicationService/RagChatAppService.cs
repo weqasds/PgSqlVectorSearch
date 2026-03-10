@@ -51,9 +51,11 @@ public class RagChatAppService : IRagChatAppService
         RagResponse ragResponse;
         if (request.KnowledgeBaseId.HasValue)
         {
-            // If knowledge base is specified, we might need to restrict search to that knowledge base
-            // For simplicity, we'll just pass the query; actual implementation should incorporate knowledge base filtering
-            ragResponse = await _ragGenerationService.GenerateResponseAsync(request.Message, sessionId);
+            // If knowledge base is specified, restrict search to that knowledge base
+            ragResponse = await _ragGenerationService.GenerateResponseAsync(
+                request.Message,
+                sessionId,
+                request.KnowledgeBaseId.Value);
         }
         else
         {

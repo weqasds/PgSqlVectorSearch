@@ -7,10 +7,40 @@ namespace DomainService.ServiceContract.Services;
 
 public interface IChatService
 {
+    /// <summary>
+    /// 创建新的对话会话
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="title"></param>
+    /// <returns></returns>
     Task<ChatSession> CreateSessionAsync(Guid userId, string title);
+    /// <summary>
+    /// 或者创建新的对话会话并关联一个知识库
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="title"></param>
+    /// <param name="knowledgeBaseId"></param>
+    /// <returns></returns>
     Task<ChatSession> CreateSessionWithKnowledgeBaseAsync(Guid userId, string title, Guid? knowledgeBaseId);
+    /// <summary>
+    /// 添加消息到对话会话
+    /// </summary>
+    /// <param name="sessionId"></param>
+    /// <param name="content"></param>
+    /// <param name="role"></param>
+    /// <returns></returns>
     Task<ChatMessage> AddMessageAsync(Guid sessionId, string content, ChatRole role);
+    /// <summary>
+    /// 获取用户的所有对话会话
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
     Task<IEnumerable<ChatSession>> GetUserSessionsAsync(Guid userId);
+    /// <summary>
+    /// 获取对话会话中的所有消息
+    /// </summary>
+    /// <param name="sessionId"></param>
+    /// <returns></returns>
     Task<IEnumerable<ChatMessage>> GetSessionMessagesAsync(Guid sessionId);
 
     /// <summary>

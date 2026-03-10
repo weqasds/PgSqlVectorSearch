@@ -114,4 +114,16 @@ public class RagGenerationRepository : RepositoryBase<RagGeneration>, IRagGenera
             .ToListAsync();
         return stats;
     }
+
+    public async Task<IEnumerable<RagGeneration>> GetGenerationsOlderThanAsync(DateTime cutoffDate)
+    {
+        return await _dbSet
+            .Where(r => r.CreatedAt < cutoffDate)
+            .ToListAsync();
+    }
+
+    public async Task DeleteGenerationsAsync(IEnumerable<RagGeneration> generations)
+    {
+        _dbSet.RemoveRange(generations);
+    }
 }

@@ -14,4 +14,8 @@ public interface IRagGenerationRepository : IRepository<RagGeneration>
     Task<DateTime?> GetLastQueryTimeByKnowledgeBaseIdAsync(Guid knowledgeBaseId);
     Task<IEnumerable<QueryStat>> GetTopQueriesByKnowledgeBaseIdAsync(Guid knowledgeBaseId, int topN);
     Task<IEnumerable<QueryStat>> GetPopularQueriesAsync(int topN);
+
+    // Cleanup methods
+    Task<IEnumerable<RagGeneration>> GetGenerationsOlderThanAsync(DateTime cutoffDate);
+    Task DeleteGenerationsAsync(IEnumerable<RagGeneration> generations);
 }

@@ -12,10 +12,12 @@ namespace DomainService.Services.Auth;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly ITokenService _tokenService;
 
-    public AuthService(IUserRepository userRepository)
+    public AuthService(IUserRepository userRepository, ITokenService tokenService)
     {
         _userRepository = userRepository;
+        _tokenService = tokenService;
     }
 
     public async Task<User> AuthenticateAsync(string username, string password)
@@ -70,11 +72,9 @@ public class AuthService : IAuthService
         if (string.IsNullOrWhiteSpace(token))
             return false;
 
-        // TODO: 实现JWT令牌验证逻辑
-        // 这里应验证令牌签名、过期时间等
-        // 临时实现：假设令牌有效
-        await Task.CompletedTask;
-        return true;
+        // 使用TokenService验证令牌
+        var validationResult = _tokenService.ValidateAccessToken(token);
+        return validationResult.IsValid;
     }
 
     public async Task ChangePasswordAsync(Guid userId, string oldPassword, string newPassword)

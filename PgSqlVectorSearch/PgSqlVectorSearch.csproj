@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.73.0" />
@@ -31,6 +32,7 @@
     <ProjectReference Include="..\Application\ApplicationService.csproj" />
     <ProjectReference Include="..\Infrastructure\EFCoreInfrastructure\EFCoreInfrastructure.csproj" />
     <ProjectReference Include="..\Infrastructure\SemanticKernelAI\SemanticKernelAI.csproj" />
+    <ProjectReference Include="..\Infrastructure\InfrastructureShared\InfrastructureShared.csproj" />
   </ItemGroup>
 
 </Project>

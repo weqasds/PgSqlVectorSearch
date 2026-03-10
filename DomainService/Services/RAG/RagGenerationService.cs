@@ -22,13 +22,15 @@ public class RagGenerationService : IRagGenerationService
         _chatService = chatService;
     }
 
-    public async Task<RagResponse> GenerateResponseAsync(string query, Guid? sessionId = null)
+    public async Task<RagResponse> GenerateResponseAsync(string query, Guid? sessionId = null, Guid? knowledgeBaseId = null)
     {
         if (string.IsNullOrWhiteSpace(query))
             throw new ArgumentException("查询内容不能为空", nameof(query));
 
-        // 检索相关文档块
-        var retrievalResults = await _vectorRetrievalService.SearchSimilarChunksAsync(query);
+        // 检索相关文档块，支持知识库过滤
+        var retrievalResults = await _vectorRetrievalService.SearchSimilarChunksAsync(
+            query,
+            knowledgeBaseId: knowledgeBaseId);
 
         // 构建上下文
         var context = retrievalResults.Select(r => r.Chunk).ToList();

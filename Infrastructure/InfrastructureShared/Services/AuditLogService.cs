@@ -8,7 +8,7 @@ using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
 using DomainService.ServiceContract.CrossCutting;
 
-namespace DomainService.Services.Infrastructure;
+namespace InfrastructureShared.Services;
 
 public class AuditLogService : IAuditLogService
 {
