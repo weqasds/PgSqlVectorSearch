@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "8Keo4sdlBAs=",
+  "dgSpecHash": "qLHJFOx1o1g=",
   "success": true,
-  "projectFilePath": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+  "projectFilePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
   "expectedPackageFiles": [
     "D:\\source\\packages\\azure.ai.openai\\2.8.0-beta.1\\azure.ai.openai.2.8.0-beta.1.nupkg.sha512",
     "D:\\source\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",
@@ -36,6 +36,7 @@
     "D:\\source\\packages\\openai\\2.8.0\\openai.2.8.0.nupkg.sha512",
     "D:\\source\\packages\\pgvector\\0.3.2\\pgvector.0.3.2.nupkg.sha512",
     "D:\\source\\packages\\pgvector.entityframeworkcore\\0.3.0\\pgvector.entityframeworkcore.0.3.0.nupkg.sha512",
+    "D:\\source\\packages\\scalar.aspnetcore\\2.13.3\\scalar.aspnetcore.2.13.3.nupkg.sha512",
     "D:\\source\\packages\\system.clientmodel\\1.8.1\\system.clientmodel.1.8.1.nupkg.sha512",
     "D:\\source\\packages\\system.codedom\\9.0.0\\system.codedom.9.0.0.nupkg.sha512",
     "D:\\source\\packages\\system.configuration.configurationmanager\\8.0.0\\system.configuration.configurationmanager.8.0.0.nupkg.sha512",

@@ -1,4 +1,7 @@
 using Application.Extensions;
+using DomainService.Entities.Chat;
+using DomainService.Entities.Enums;
+using DomainService.Entities.KnowledgeManagement;
 using DomainService.Extension;
 using DomainService.ServiceContract.CrossCutting;
 using EFCoreInfrastructure;
@@ -9,8 +12,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PgSqlVectorSearch.Middleware;
+using Scalar.AspNetCore;
 using System.Text;
-
 namespace PgSqlVectorSearch;
 
 public class Program
@@ -21,7 +24,7 @@ public class Program
 
         // 配置数据库连接字符串
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                              "Host=localhost;Database=ragdb;Username=postgres;Password=@qq13015361197";
+                              "Host=localhost;Database=rag_db;Username=postgres;Password=@qq13015361197";
 
         // 配置JWT认证
         var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
@@ -29,8 +32,17 @@ public class Program
         var jwtSettings = jwtSettingsSection.Get<JwtSettings>() ?? new JwtSettings();
 
         // 1. DbContext注册
-        builder.Services.AddDbContext<RagDbContext>(options =>
-            options.UseNpgsql(connectionString));
+        builder.Services.AddDbContext<RagDbContext>(options =>{
+            options.UseNpgsql(connectionString, option =>
+            {
+                option.MapEnum<ChatRole>("chat_role");
+                option.MapEnum<RelationType>("relation_type");
+                option.MapEnum<EntityType>("entity_type");
+                option.UseVector();
+                option.MapEnum<DocumentStatus>("document_status");
+            });
+            
+        });
 
         // 2. JWT认证配置
         builder.Services.AddAuthentication(options =>
@@ -82,17 +94,16 @@ public class Program
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
-
         var app = builder.Build();
-
+        app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
+            app.MapScalarApiReference();
+            
         }
-
         app.UseHttpsRedirection();
-        app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();

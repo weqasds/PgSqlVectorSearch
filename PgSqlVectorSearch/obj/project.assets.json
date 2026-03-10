@@ -494,6 +494,22 @@
           "build/net8.0/_._": {}
         }
       },
+      "Scalar.AspNetCore/2.13.3": {
+        "type": "package",
+        "compile": {
+          "lib/net10.0/Scalar.AspNetCore.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Scalar.AspNetCore.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
+      },
       "System.ClientModel/1.8.1": {
         "type": "package",
         "dependencies": {
@@ -1438,6 +1454,25 @@
         "pgvector.entityframeworkcore.nuspec"
       ]
     },
+    "Scalar.AspNetCore/2.13.3": {
+      "sha512": "py+bnF628jLbm63Q8VabQyzNNP0/jMJAVLrUaxhLMvU75GZVcN9LgdXRLk42Grpcih3rqZcRY+eSSkYO3+3QTQ==",
+      "type": "package",
+      "path": "scalar.aspnetcore/2.13.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/net10.0/Scalar.AspNetCore.dll",
+        "lib/net10.0/Scalar.AspNetCore.xml",
+        "lib/net8.0/Scalar.AspNetCore.dll",
+        "lib/net8.0/Scalar.AspNetCore.xml",
+        "lib/net9.0/Scalar.AspNetCore.dll",
+        "lib/net9.0/Scalar.AspNetCore.xml",
+        "scalar.aspnetcore.2.13.3.nupkg.sha512",
+        "scalar.aspnetcore.nuspec"
+      ]
+    },
     "System.ClientModel/1.8.1": {
       "sha512": "4oUQgw/vaO4FBOk3YsH40hbrjxRED1l95rRLvTMtHXfQxapXya9IfPpm/KgwValFFtYTfYGFOs/qzGmGyexicQ==",
       "type": "package",
@@ -1737,6 +1772,7 @@
       "Microsoft.SemanticKernel >= 1.73.0",
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets >= 1.23.0",
       "Npgsql.EntityFrameworkCore.PostgreSQL >= 10.0.0",
+      "Scalar.AspNetCore >= 2.13.3",
       "SemanticKernelAI >= 1.0.0"
     ]
   },
@@ -1747,11 +1783,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+      "projectUniqueName": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
       "projectName": "PgSqlVectorSearch",
-      "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+      "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
       "packagesPath": "D:\\source\\packages",
-      "outputPath": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\obj\\",
+      "outputPath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1772,17 +1808,17 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
-              "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj"
+            "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
+              "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj"
             },
-            "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj": {
-              "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj"
+            "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj": {
+              "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj"
             },
-            "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj": {
-              "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj"
+            "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj": {
+              "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\InfrastructureShared\\InfrastructureShared.csproj"
             },
-            "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj": {
-              "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj"
+            "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj": {
+              "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\SemanticKernelAI\\SemanticKernelAI.csproj"
             }
           }
         }
@@ -1822,6 +1858,10 @@
           "Npgsql.EntityFrameworkCore.PostgreSQL": {
             "target": "Package",
             "version": "[10.0.0, )"
+          },
+          "Scalar.AspNetCore": {
+            "target": "Package",
+            "version": "[2.13.3, )"
           }
         },
         "imports": [

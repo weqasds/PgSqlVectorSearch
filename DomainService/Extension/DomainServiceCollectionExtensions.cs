@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using DomainService.ServiceContract.CrossCutting;
 using DomainService.ServiceContract.Services;
 using DomainService.Services.Auth;
 using DomainService.Services.Chat;
@@ -7,7 +6,7 @@ using DomainService.Services.KnowledgeManagement;
 using DomainService.Services.RAG;
 using DomainService.Services.UserManagement;
 using DomainService.Services.VectorRetrieval;
-
+using DomainService.ServiceContract.CrossCutting;
 namespace DomainService.Extension;
 
 /// <summary>

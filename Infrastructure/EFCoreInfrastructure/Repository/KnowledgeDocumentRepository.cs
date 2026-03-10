@@ -28,15 +28,15 @@ public class KnowledgeDocumentRepository : RepositoryBase<KnowledgeDocument>, IK
 
     public async Task<int> GetCountByDateRangeAsync(DateOnly start, DateOnly end)
     {
-        var startDateTime = start.ToDateTime(TimeOnly.MinValue);
-        var endDateTime = end.ToDateTime(TimeOnly.MaxValue);
+        var startDateTime = start.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+        var endDateTime = end.ToDateTime(TimeOnly.MaxValue).ToUniversalTime();
         return await _dbSet.CountAsync(d => d.CreatedAt >= startDateTime && d.CreatedAt <= endDateTime);
     }
 
     public async Task<int> GetCountByDateAsync(DateOnly date)
     {
-        var startDateTime = date.ToDateTime(TimeOnly.MinValue);
-        var endDateTime = date.ToDateTime(TimeOnly.MaxValue);
+        var startDateTime = date.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+        var endDateTime = date.ToDateTime(TimeOnly.MaxValue).ToUniversalTime();
         return await _dbSet.CountAsync(d => d.CreatedAt >= startDateTime && d.CreatedAt <= endDateTime);
     }
 

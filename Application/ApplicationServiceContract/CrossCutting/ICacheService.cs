@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace DomainService.ServiceContract.CrossCutting;
+namespace Application.ApplicationServiceContract.CrossCutting;
 
 public interface ICacheService
 {

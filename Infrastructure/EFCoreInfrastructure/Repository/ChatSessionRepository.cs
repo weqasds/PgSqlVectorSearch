@@ -46,7 +46,7 @@ public class ChatSessionRepository : RepositoryBase<ChatSession>, IChatSessionRe
         }
     }
 
-    public async Task<IEnumerable<ChatSession>> GetSessionsOlderThanAsync(DateTime cutoffDate)
+    public async Task<IEnumerable<ChatSession>> GetSessionsOlderThanAsync(DateTimeOffset cutoffDate)
     {
         return await _dbSet.Where(s => s.CreatedAt < cutoffDate)
             .ToListAsync();

@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-using DomainService.ServiceContract.CrossCutting;
+using Application.ApplicationServiceContract.CrossCutting;
 
 namespace InfrastructureShared.Services;
 

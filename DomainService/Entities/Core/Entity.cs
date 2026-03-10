@@ -13,7 +13,7 @@ public class Entity<Tkey>
     /// <summary>
     /// 记录创建时间
     /// </summary>
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
     /// <summary>
     /// 软删除标志
     /// </summary>
@@ -21,7 +21,7 @@ public class Entity<Tkey>
     /// <summary>
     /// 记录最后修改时间
     /// </summary>
-    public DateTime? ModifiedAt { get; set; }
+    public DateTimeOffset? ModifiedAt { get; set; }
     public Entity()
     {
         // 如果Tkey是Guid类型，则默认生成一个新的Guid，否则使用默认值

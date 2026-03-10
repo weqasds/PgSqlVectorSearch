@@ -12,7 +12,7 @@ public interface IRagRetrievalLogRepository : IRepository<RagRetrievalLog>
     /// </summary>
     /// <param name="cutoffDate">截止日期</param>
     /// <returns>早于截止日期的日志列表</returns>
-    Task<IEnumerable<RagRetrievalLog>> GetLogsOlderThanAsync(DateTime cutoffDate);
+    Task<IEnumerable<RagRetrievalLog>> GetLogsOlderThanAsync(DateTimeOffset cutoffDate);
 
     /// <summary>
     /// 批量删除检索日志
@@ -26,5 +26,5 @@ public interface IRagRetrievalLogRepository : IRepository<RagRetrievalLog>
     /// <param name="startDate">开始日期</param>
     /// <param name="endDate">结束日期</param>
     /// <returns>日志数量</returns>
-    Task<int> GetCountByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<int> GetCountByDateRangeAsync(DateTimeOffset startDate, DateTimeOffset endDate);
 }

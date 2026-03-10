@@ -1,6 +1,6 @@
 using System;
 
-namespace DomainService.ServiceContract.CrossCutting;
+namespace Application.ApplicationServiceContract.CrossCutting;
 
 /// <summary>
 /// 当前用户服务接口，用于获取当前认证用户的信息

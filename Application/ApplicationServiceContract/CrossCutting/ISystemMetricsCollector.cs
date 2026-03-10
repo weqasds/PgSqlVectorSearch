@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace DomainService.ServiceContract.CrossCutting;
+namespace Application.ApplicationServiceContract.CrossCutting;
 
 /// <summary>
 /// 系统指标收集器接口，用于收集系统性能指标

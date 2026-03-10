@@ -15,7 +15,7 @@ public interface IChatSessionRepository : IRepository<ChatSession>
     Task DeleteMessageAsync(Guid messageId);
 
     // Cleanup methods
-    Task<IEnumerable<ChatSession>> GetSessionsOlderThanAsync(DateTime cutoffDate);
+    Task<IEnumerable<ChatSession>> GetSessionsOlderThanAsync(DateTimeOffset cutoffDate);
 
     // Analytics methods
     Task<int> GetTotalCountAsync();

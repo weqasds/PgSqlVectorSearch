@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Application.ApplicationServiceContract;
 using Application.Dto;
+using Application.ApplicationServiceContract.CrossCutting;
 
 namespace PgSqlVectorSearch.Controllers;
 
@@ -9,10 +10,12 @@ namespace PgSqlVectorSearch.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserAppService _userAppService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public UserController(IUserAppService userAppService)
+    public UserController(IUserAppService userAppService, ICurrentUserService currentUserService)
     {
         _userAppService = userAppService;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet("{id}")]

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
-using DomainService.ServiceContract.CrossCutting;
+using Application.ApplicationServiceContract.CrossCutting;
 
 namespace InfrastructureShared.Services;
 
@@ -94,7 +94,7 @@ public class CacheService : ICacheService
     private class CacheItem
     {
         public object Value { get; set; } = null!;
-        public DateTime ExpirationTime { get; set; }
-        public DateTime CreatedTime { get; set; }
+        public DateTimeOffset ExpirationTime { get; set; }
+        public DateTimeOffset CreatedTime { get; set; }
     }
 }

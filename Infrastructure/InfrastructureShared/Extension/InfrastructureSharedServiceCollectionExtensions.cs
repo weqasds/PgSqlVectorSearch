@@ -1,3 +1,4 @@
+using Application.ApplicationServiceContract.CrossCutting;
 using DomainService.ServiceContract.CrossCutting;
 using InfrastructureShared.Services;
 using Microsoft.AspNetCore.Http;

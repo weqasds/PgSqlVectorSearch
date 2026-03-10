@@ -174,7 +174,7 @@ public class ChatSession : Entity<Guid>
     /// <summary>
     /// 获取最新消息时间
     /// </summary>
-    public DateTime? GetLatestMessageTime()
+    public DateTimeOffset? GetLatestMessageTime()
     {
         return Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.CreatedAt;
     }

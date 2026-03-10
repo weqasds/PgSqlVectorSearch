@@ -12,19 +12,20 @@ public class RagGenerationRepository : RepositoryBase<RagGeneration>, IRagGenera
 {
     public RagGenerationRepository(RagDbContext context) : base(context)
     {
-    }
+    } 
 
     public async Task<int> GetCountByDateRangeAsync(DateOnly start, DateOnly end)
     {
-        var startDateTime = start.ToDateTime(TimeOnly.MinValue);
-        var endDateTime = end.ToDateTime(TimeOnly.MaxValue);
-        return await _dbSet.CountAsync(r => r.CreatedAt >= startDateTime && r.CreatedAt <= endDateTime);
+        var startDateTime = start.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+        var endDateTime = end.ToDateTime(TimeOnly.MaxValue).ToUniversalTime();
+        return await _dbSet.CountAsync(r => r.CreatedAt >= startDateTime && 
+        r.CreatedAt <= endDateTime);
     }
 
     public async Task<int> GetCountByDateAsync(DateOnly date)
     {
-        var startDateTime = date.ToDateTime(TimeOnly.MinValue);
-        var endDateTime = date.ToDateTime(TimeOnly.MaxValue);
+        var startDateTime = date.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+        var endDateTime = date.ToDateTime(TimeOnly.MaxValue).ToUniversalTime();
         return await _dbSet.CountAsync(r => r.CreatedAt >= startDateTime && r.CreatedAt <= endDateTime);
     }
 
@@ -50,7 +51,7 @@ public class RagGenerationRepository : RepositoryBase<RagGeneration>, IRagGenera
             .CountAsync();
     }
 
-    public async Task<DateTime?> GetLastQueryTimeByKnowledgeBaseIdAsync(Guid knowledgeBaseId)
+    public async Task<DateTimeOffset?> GetLastQueryTimeByKnowledgeBaseIdAsync(Guid knowledgeBaseId)
     {
         var lastGeneration = await _dbSet
             .Join(_context.RagRetrievalLogs,
@@ -115,7 +116,7 @@ public class RagGenerationRepository : RepositoryBase<RagGeneration>, IRagGenera
         return stats;
     }
 
-    public async Task<IEnumerable<RagGeneration>> GetGenerationsOlderThanAsync(DateTime cutoffDate)
+    public async Task<IEnumerable<RagGeneration>> GetGenerationsOlderThanAsync(DateTimeOffset cutoffDate)
     {
         return await _dbSet
             .Where(r => r.CreatedAt < cutoffDate)

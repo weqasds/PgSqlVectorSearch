@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using DomainService.ServiceContract.CrossCutting;
+using Application.ApplicationServiceContract.CrossCutting;
 using Microsoft.Extensions.Logging;
 
 namespace InfrastructureShared.Services;

@@ -10,7 +10,7 @@ public class KnowledgeBaseUsageDto
     public int DocumentCount { get; set; }
     public int ChunkCount { get; set; }
     public int QueryCount { get; set; }
-    public DateTime? LastQueryTime { get; set; }
+    public DateTimeOffset? LastQueryTime { get; set; }
     public IEnumerable<QueryStat> TopQueries { get; set; } = null!;
 }
 
@@ -18,5 +18,5 @@ public class QueryStat
 {
     public string Query { get; set; } = null!;
     public int Count { get; set; }
-    public DateTime LastQueried { get; set; }
+    public DateTimeOffset LastQueried { get; set; }
 }

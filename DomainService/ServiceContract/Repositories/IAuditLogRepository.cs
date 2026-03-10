@@ -18,12 +18,12 @@ public interface IAuditLogRepository : IRepository<AuditLog>
     /// <summary>
     /// 查询时间范围内的审计日志
     /// </summary>
-    Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTimeOffset startDate, DateTimeOffset endDate);
 
     /// <summary>
     /// 查询特定用户在时间范围内的审计日志
     /// </summary>
-    Task<IEnumerable<AuditLog>> GetByUserIdAndDateRangeAsync(Guid userId, DateTime startDate, DateTime endDate);
+    Task<IEnumerable<AuditLog>> GetByUserIdAndDateRangeAsync(Guid userId, DateTimeOffset startDate, DateTimeOffset endDate);
 
     /// <summary>
     /// 查询系统操作日志（无用户关联）

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
-using DomainService.ServiceContract.CrossCutting;
+using Application.ApplicationServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 using Application.QueryServices;
 
@@ -121,7 +121,7 @@ public class SystemAdminAppService : ISystemAdminAppService
             new ProcessingMetric { Operation = "DocumentProcessing", Count = totalDocuments, AverageDuration = 1250.2 },
             new ProcessingMetric { Operation = "VectorGeneration", Count = totalChunks, AverageDuration = 85.7 },
             new ProcessingMetric { Operation = "RAGGeneration", Count = await _ragGenerationRepository.GetCountByDateRangeAsync(
-                DateOnly.FromDateTime(range.Start), DateOnly.FromDateTime(range.End)),
+                DateOnly.FromDateTime(range.Start.DateTime), DateOnly.FromDateTime(range.End.DateTime)),
                 AverageDuration = 320.4 }
         };
 
@@ -141,7 +141,7 @@ public class SystemAdminAppService : ISystemAdminAppService
         };
     }
 
-    public async Task CleanupOldDataAsync(DateTime cutoffDate)
+    public async Task CleanupOldDataAsync(DateTimeOffset cutoffDate)
     {
         // Delete old chat sessions and messages
         var oldSessions = await _chatSessionRepository.GetSessionsOlderThanAsync(cutoffDate);

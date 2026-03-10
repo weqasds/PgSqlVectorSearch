@@ -47,15 +47,15 @@ public class UserRepository : RepositoryBase<User>, IUserRepository
 
     public async Task<int> GetActiveUserCountAsync(DateOnly start, DateOnly end)
     {
-        var startDateTime = start.ToDateTime(TimeOnly.MinValue);
-        var endDateTime = end.ToDateTime(TimeOnly.MaxValue);
+        var startDateTime = start.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+        var endDateTime = end.ToDateTime(TimeOnly.MaxValue).ToUniversalTime();
         return await _dbSet.CountAsync(u => u.ModifiedAt >= startDateTime && u.ModifiedAt <= endDateTime);
     }
 
     public async Task<int> GetActiveUserCountByDateAsync(DateOnly date)
     {
-        var startDateTime = date.ToDateTime(TimeOnly.MinValue);
-        var endDateTime = date.ToDateTime(TimeOnly.MaxValue);
+        var startDateTime = date.ToDateTime(TimeOnly.MinValue).ToUniversalTime();
+        var endDateTime = date.ToDateTime(TimeOnly.MaxValue).ToUniversalTime();
         return await _dbSet.CountAsync(u => u.ModifiedAt >= startDateTime && u.ModifiedAt <= endDateTime);
     }
 

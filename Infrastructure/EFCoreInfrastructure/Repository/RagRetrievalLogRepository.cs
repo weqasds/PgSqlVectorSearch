@@ -14,7 +14,7 @@ public class RagRetrievalLogRepository : RepositoryBase<RagRetrievalLog>, IRagRe
     {
     }
 
-    public async Task<IEnumerable<RagRetrievalLog>> GetLogsOlderThanAsync(DateTime cutoffDate)
+    public async Task<IEnumerable<RagRetrievalLog>> GetLogsOlderThanAsync(DateTimeOffset cutoffDate)
     {
         return await _dbSet
             .Where(r => r.RagGeneration.CreatedAt < cutoffDate)
@@ -26,7 +26,7 @@ public class RagRetrievalLogRepository : RepositoryBase<RagRetrievalLog>, IRagRe
         _dbSet.RemoveRange(logs);
     }
 
-    public async Task<int> GetCountByDateRangeAsync(DateTime startDate, DateTime endDate)
+    public async Task<int> GetCountByDateRangeAsync(DateTimeOffset startDate, DateTimeOffset endDate)
     {
         return await _dbSet
             .CountAsync(r => r.RagGeneration.CreatedAt >= startDate && r.RagGeneration.CreatedAt <= endDate);

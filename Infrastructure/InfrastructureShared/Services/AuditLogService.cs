@@ -15,7 +15,7 @@ using DomainService.Entities.RAG;
 using DomainService.Entities.Analytics;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
-using DomainService.ServiceContract.CrossCutting;
+using Application.ApplicationServiceContract.CrossCutting;
 
 namespace InfrastructureShared.Services;
 
@@ -41,31 +41,27 @@ public class AuditLogService : IAuditLogService
         await _auditLogRepository.AddAsync(auditLog);
     }
 
-    public async Task<IEnumerable<AuditLog>> QueryLogsAsync(DateTime start, DateTime end, string? operation)
+    public async Task<IEnumerable<AuditLog>> QueryLogsAsync(
+    DateTimeOffset? start,
+    DateTimeOffset? end,
+    string? operation)
     {
-        if (start > end)
+        if (start.HasValue && end.HasValue && start > end)
             throw new ArgumentException("开始时间不能晚于结束时间", nameof(start));
 
-        // 获取所有审计日志
-        var allLogs = await _auditLogRepository.GetAllAsync();
-        var filteredLogs = new List<AuditLog>();
+        var logs = await _auditLogRepository.GetAllAsync();
 
-        foreach (var log in allLogs)
-        {
-            if (log.IsDeleted)
-                continue;
+        var query = logs.Where(log => !log.IsDeleted);
 
-            // 过滤时间范围
-            if (log.CreatedAt < start || log.CreatedAt > end)
-                continue;
+        if (start.HasValue)
+            query = query.Where(log => log.CreatedAt >= start.Value);
 
-            // 过滤操作类型
-            if (!string.IsNullOrEmpty(operation) && !log.Operation.Contains(operation, StringComparison.OrdinalIgnoreCase))
-                continue;
+        if (end.HasValue)
+            query = query.Where(log => log.CreatedAt <= end.Value);
 
-            filteredLogs.Add(log);
-        }
+        if (!string.IsNullOrWhiteSpace(operation))
+            query = query.Where(log => log.Operation.Contains(operation, StringComparison.OrdinalIgnoreCase));
 
-        return filteredLogs.OrderByDescending(log => log.CreatedAt);
+        return query.OrderByDescending(log => log.CreatedAt);
     }
 }

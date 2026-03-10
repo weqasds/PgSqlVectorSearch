@@ -9,7 +9,7 @@ public class DocumentDto
     public string FilePath { get; set; } = null!;
     public long FileSize { get; set; }
     public string ContentType { get; set; } = null!;
-    public DateTime? UploadedAt { get; set; }
+    public DateTimeOffset? UploadedAt { get; set; }
     public string Status { get; set; } = null!; // e.g., "Pending", "Processing", "Processed", "Failed"
     public int ChunkCount { get; set; }
 }

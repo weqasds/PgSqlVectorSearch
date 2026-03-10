@@ -31,7 +31,7 @@ public class AuditLogRepository : RepositoryBase<AuditLog>, IAuditLogRepository
         return toDelete.Count;
     }
 
-    public async Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+    public async Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTimeOffset startDate, DateTimeOffset endDate)
     {
         return await _dbSet
             .Where(x => !x.IsDeleted && x.CreatedAt >= startDate && x.CreatedAt <= endDate)
@@ -51,7 +51,7 @@ public class AuditLogRepository : RepositoryBase<AuditLog>, IAuditLogRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<AuditLog>> GetByUserIdAndDateRangeAsync(Guid userId, DateTime startDate, DateTime endDate)
+    public async Task<IEnumerable<AuditLog>> GetByUserIdAndDateRangeAsync(Guid userId, DateTimeOffset startDate, DateTimeOffset endDate)
     {
         return await _dbSet
             .Where(x => !x.IsDeleted && x.UserId == userId && x.CreatedAt >= startDate && x.CreatedAt <= endDate)

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Application.ApplicationServiceContract;
 using Application.Dto;
+using Application.ApplicationServiceContract.CrossCutting;
 
 namespace PgSqlVectorSearch.Controllers;
 
@@ -9,10 +10,12 @@ namespace PgSqlVectorSearch.Controllers;
 public class ChatController : ControllerBase
 {
     private readonly IRagChatAppService _ragChatAppService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public ChatController(IRagChatAppService ragChatAppService)
+    public ChatController(IRagChatAppService ragChatAppService, ICurrentUserService currentUserService)
     {
         _ragChatAppService = ragChatAppService;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet("conversations")]
@@ -28,7 +31,12 @@ public class ChatController : ControllerBase
         var result = await _ragChatAppService.GetUserChatSessionsAsync(currentUserId.Value);
         return Ok(result);
     }
-
+    
+    /// <summary>
+    /// 创建新的聊天会话
+    /// </summary>
+    /// <param name="request">请求体</param>
+    /// <returns>创建结果</returns>
     [HttpPost("conversations")]
     public async Task<ActionResult<ChatSessionDto>> CreateConversation([FromBody] CreateConversationRequest request)
     {
@@ -98,7 +106,7 @@ public class ChatController : ControllerBase
     {
         // TODO: Extract user ID from authentication token
         // For now, return a placeholder
-        return Guid.Parse("00000000-0000-0000-0000-000000000001");
+        return _currentUserService.GetCurrentUserId();
     }
 }
 
