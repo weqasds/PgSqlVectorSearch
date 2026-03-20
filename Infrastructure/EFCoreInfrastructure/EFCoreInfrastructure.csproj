@@ -20,6 +20,7 @@
 	  <Folder Include="Repository\" />
 	  <Folder Include="QueryServices\" />
 	  <Folder Include="Extension\" />
+	  <Folder Include="Services\" />
 	</ItemGroup>
 
 </Project>

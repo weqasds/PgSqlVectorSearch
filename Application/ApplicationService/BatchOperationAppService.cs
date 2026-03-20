@@ -8,92 +8,122 @@ using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
 using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
+using Application.ApplicationServiceContract.DocumentationService;
+using Application.Extensions;
+using ApplicationServiceContract.CrossCutting;
 
 namespace Application.ApplicationService;
 
 public class BatchOperationAppService : IBatchOperationAppService
 {
-    private readonly IDocumentProcessingService _documentProcessingService;
+    private readonly IDocumentManagementAppService _documentManageService;
     private readonly IKnowledgeDocumentRepository _knowledgeDocumentRepository;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public BatchOperationAppService(
-        IDocumentProcessingService documentProcessingService,
+        IDocumentManagementAppService documentManagementService,
         IKnowledgeDocumentRepository knowledgeDocumentRepository,
-        IFileStorageService fileStorageService)
+        IFileStorageService fileStorageService,
+        IUnitOfWork unitOfWork)
     {
-        _documentProcessingService = documentProcessingService;
+        _documentManageService = documentManagementService;
         _knowledgeDocumentRepository = knowledgeDocumentRepository;
         _fileStorageService = fileStorageService;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<BatchImportResultDto> ImportDocumentsAsync(Guid knowledgeBaseId, FileUpload zipFile)
+    public async Task<BatchImportResultDto> ImportDocumentsAsync(Guid knowledgeBaseId, FileUpload file)
     {
         var results = new List<ImportResult>();
         int successCount = 0;
         int failureCount = 0;
-
-        // Create a temporary directory to extract zip files
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(tempDir);
-
+        
         try
         {
-            // Extract zip file
-            using (var archive = new ZipArchive(zipFile.Content, ZipArchiveMode.Read))
+            if (file.ContentType==FileType.Text||file.ContentType==FileType.Markdown||file.ContentType==FileType.Pdf) { }
+            if (file.ContentType == FileType.Zip)
             {
-                foreach (var entry in archive.Entries)
+                // Create a temporary directory to extract zip files
+                var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                Directory.CreateDirectory(tempDir);
+                // Extract zip file
+                using (var archive = new ZipArchive(file.Content, ZipArchiveMode.Read))
                 {
-                    // Skip directories
-                    if (string.IsNullOrEmpty(entry.Name))
-                        continue;
-
-                    var filePath = Path.Combine(tempDir, entry.Name);
-                    try
+                    foreach (var entry in archive.Entries)
                     {
-                        // Extract entry
-                        entry.ExtractToFile(filePath, overwrite: true);
+                        // Skip directories
+                        if (string.IsNullOrEmpty(entry.Name))
+                            continue;
 
-                        // Read file as stream
-                        using (var fileStream = File.OpenRead(filePath))
+                        var filePath = Path.Combine(tempDir, entry.Name);
+                        try
                         {
-                            // Upload document
-                            var document = await _documentProcessingService.UploadDocumentAsync(
-                                knowledgeBaseId,
-                                fileStream,
-                                entry.Name);
+                            // Extract entry
+                            entry.ExtractToFile(filePath, overwrite: true);
 
+                            // Read file as stream
+                            using (var fileStream = File.OpenRead(filePath))
+                            {
+                                // Upload document
+                                var document = await _documentManageService.UploadDocumentAsync(
+                                    knowledgeBaseId,
+                                    new FileUpload
+                                    {
+                                        Content = fileStream,
+                                        FileName = entry.Name,
+                                        ContentType = MimeTypeMapper.GetDocumentType(entry.FullName)
+                                    });
+
+                                results.Add(new ImportResult
+                                {
+                                    FileName = entry.Name,
+                                    Success = true,
+                                    DocumentId = document.Id
+                                });
+                                successCount++;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
                             results.Add(new ImportResult
                             {
                                 FileName = entry.Name,
-                                Success = true,
-                                DocumentId = document.Id
+                                Success = false,
+                                ErrorMessage = ex.Message
                             });
-                            successCount++;
+                            failureCount++;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        results.Add(new ImportResult
-                        {
-                            FileName = entry.Name,
-                            Success = false,
-                            ErrorMessage = ex.Message
-                        });
-                        failureCount++;
-                    }
                 }
+                if (Directory.Exists(tempDir))
+                    // Clean up temporary directory
+                    Directory.Delete(tempDir, recursive: true);
+                
             }
-        }
-        finally
-        {
-            // Clean up temporary directory
-            if (Directory.Exists(tempDir))
+            if (file.ContentType == FileType.Unknown)
             {
-                Directory.Delete(tempDir, recursive: true);
+                results.Add(new ImportResult
+                {
+                    FileName = file.FileName,
+                    Success = false,
+                    ErrorMessage = $"Unsupported file type: {file.ContentType}"
+                });
+                failureCount++;
             }
         }
-
+        catch (Exception ex)
+        {
+            // Handle zip extraction errors
+            results.Add(new ImportResult
+            {
+                FileName = file.FileName,
+                Success = false,
+                ErrorMessage = $"Failed to process zip file: {ex.Message}"
+            });
+            failureCount++;
+        }
+        await _unitOfWork.SaveChangesAsync();
         return new BatchImportResultDto
         {
             TotalFiles = successCount + failureCount,
@@ -117,7 +147,7 @@ public class BatchOperationAppService : IBatchOperationAppService
             try
             {
                 // Reprocess document
-                await _documentProcessingService.ProcessDocumentAsync(document.Id);
+                await _documentManageService.ProcessDocumentAsync(document.Id);
 
                 // Get chunk count after processing
                 var chunkCount = await _knowledgeDocumentRepository.GetChunkCountAsync(document.Id);
@@ -143,7 +173,7 @@ public class BatchOperationAppService : IBatchOperationAppService
                 failedCount++;
             }
         }
-
+        await _unitOfWork.SaveChangesAsync();
         return new BatchProcessResultDto
         {
             TotalDocuments = processedCount + failedCount,

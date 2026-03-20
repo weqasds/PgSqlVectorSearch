@@ -1448,6 +1448,9 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
+              "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj": {
+                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Application\\ApplicationService.csproj"
+              },
               "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
                 "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
               }

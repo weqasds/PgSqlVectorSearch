@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EFCoreInfrastructure.Repository;
 
-public abstract class RepositoryBase<T> : IRepository<T> where T : Entity<Guid>
+public abstract class RepositoryBase<T> : IRepository<T> where T: Entity<Guid>
 {
     protected readonly RagDbContext _context;
     protected readonly DbSet<T> _dbSet;
@@ -29,19 +29,17 @@ public abstract class RepositoryBase<T> : IRepository<T> where T : Entity<Guid>
     public virtual async Task AddAsync(T entity)
     {
         await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
+        Console.WriteLine(_context.GetHashCode());
     }
 
     public virtual async Task UpdateAsync(T entity)
     {
         _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
     }
 
     public virtual async Task DeleteAsync(T entity)
     {
         _dbSet.Remove(entity);
-        await _context.SaveChangesAsync();
     }
 
     public virtual async Task<bool> ExistsAsync(Guid id)
@@ -79,24 +77,15 @@ public abstract class RepositoryBase<T> : IRepository<T> where T : Entity<Guid>
     public virtual async Task AddRangeAsync(IEnumerable<T> entities)
     {
         await _dbSet.AddRangeAsync(entities);
-        await _context.SaveChangesAsync();
     }
 
     public virtual async Task UpdateRangeAsync(IEnumerable<T> entities)
     {
         _dbSet.UpdateRange(entities);
-        await _context.SaveChangesAsync();
     }
 
     public virtual async Task DeleteRangeAsync(IEnumerable<T> entities)
     {
         _dbSet.RemoveRange(entities);
-        await _context.SaveChangesAsync();
-    }
-
-    // Save changes (for unit of work pattern)
-    public virtual async Task<int> SaveChangesAsync()
-    {
-        return await _context.SaveChangesAsync();
     }
 }

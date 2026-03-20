@@ -9,6 +9,8 @@ using Application.Dto;
 using DomainService.Entities.UserManagement;
 using System.Security.Cryptography;
 using System.Text;
+using ApplicationServiceContract.CrossCutting;
+using ApplicationService.Dto.Request;
 
 namespace Application.ApplicationService;
 
@@ -18,17 +20,20 @@ public class AuthAppService : IAuthAppService
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public AuthAppService(
         IAuthService authService,
         IUserRepository userRepository,
         ITokenService tokenService,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IUnitOfWork unitOfWork)
     {
         _authService = authService;
         _userRepository = userRepository;
         _tokenService = tokenService;
         _currentUserService = currentUserService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -107,7 +112,7 @@ public class AuthAppService : IAuthAppService
     {
         // Register user via domain service
         var user = await _authService.RegisterAsync(request.Username, request.Email, request.Password);
-
+        await _unitOfWork.SaveChangesAsync();
         // Generate JWT token for new user
         var token = _tokenService.GenerateAccessToken(user);
 
@@ -137,7 +142,7 @@ public class AuthAppService : IAuthAppService
         }
 
         await _authService.ChangePasswordAsync(userId.Value, request.OldPassword, request.NewPassword);
-
+        await _unitOfWork.SaveChangesAsync();
         // Log the password change event
         Console.WriteLine($"User {userId} changed password successfully.");
     }

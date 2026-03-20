@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Application.ApplicationServiceContract;
-using Application.Dto;
-
+using PgSqlVectorSearch.Model;
+using Application.Extensions;
 namespace PgSqlVectorSearch.Controllers;
 
 [ApiController]
@@ -14,13 +14,26 @@ public class BatchController : ControllerBase
     {
         _batchOperationAppService = batchOperationAppService;
     }
-
+    /// <summary>
+    /// 批量导入文档
+    /// </summary>
+    /// <param name="knowledgeBaseId"></param>
+    /// <param name="zipFile"></param>
+    /// <returns></returns>
     [HttpPost("import")]
     public async Task<ActionResult<BatchImportResultDto>> ImportDocuments(
         [FromQuery] Guid knowledgeBaseId,
-        [FromForm] FileUpload zipFile)
+        [FromForm] FileUploadDto uploadFile)
     {
-        var result = await _batchOperationAppService.ImportDocumentsAsync(knowledgeBaseId, zipFile);
+        var file = uploadFile.File;
+        var fileUpload = new FileUpload
+        {
+            Content = file.OpenReadStream(),
+            FileName = file.FileName,
+            ContentType = MimeTypeMapper.GetDocumentType(file.ContentType),
+            FileSize = file.Length
+        };
+        var result = await _batchOperationAppService.ImportDocumentsAsync(knowledgeBaseId, fileUpload);
         return Accepted(result);
     }
 

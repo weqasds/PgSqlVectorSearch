@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using DomainService.Entities.Core;
 
 namespace DomainService.Entities.System;
@@ -8,6 +9,13 @@ public class AuditLog : Entity<Guid>
     public string Operation { get; set; } = null!;
     public Guid? UserId { get; set; }
     public string Details { get; set; } = null!;
+    // 数据库审计相关字段
+    public string? TableName { get; set; }
+    public string? EntityId { get; set; }
+    public string? EntityName { get; set; }
+    public JsonElement? OldValues { get; set; }
+    public JsonElement? NewValues { get; set; }
+    public string? AffectedColumns { get; set; }
 
     // 私有构造函数用于工厂方法和反序列化
     private AuditLog() { }
@@ -15,7 +23,16 @@ public class AuditLog : Entity<Guid>
     /// <summary>
     /// 创建审计日志的工厂方法
     /// </summary>
-    public static AuditLog Create(string operation, Guid? userId = null, string? details = null)
+    public static AuditLog Create(string operation,
+                                Guid? userId = null,
+                                string? details = null,
+                                string? tableName = null,
+                                string? entityId = null,
+                                string? entityName = null,
+                                JsonElement? oldValues = null,
+                                JsonElement? newValues = null,
+                                string? affectedColumns = null
+    )
     {
         if (string.IsNullOrWhiteSpace(operation))
             throw new ArgumentException("操作类型不能为空", nameof(operation));
@@ -26,8 +43,12 @@ public class AuditLog : Entity<Guid>
             Operation = operation.Trim(),
             UserId = userId,
             Details = details ?? string.Empty,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
+            TableName = tableName ?? string.Empty,
+            EntityId = entityId ?? string.Empty,
+            EntityName = entityName ?? string.Empty,
+            OldValues = oldValues ?? null,
+            NewValues = newValues ?? null,
+            AffectedColumns = affectedColumns ?? string.Empty
         };
 
         return auditLog;
@@ -42,7 +63,6 @@ public class AuditLog : Entity<Guid>
             throw new ArgumentException("详情不能为空", nameof(details));
 
         Details = details;
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -54,7 +74,6 @@ public class AuditLog : Entity<Guid>
             throw new ArgumentException("附加详情不能为空", nameof(additionalDetails));
 
         Details = string.IsNullOrEmpty(Details) ? additionalDetails : Details + "; " + additionalDetails;
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>

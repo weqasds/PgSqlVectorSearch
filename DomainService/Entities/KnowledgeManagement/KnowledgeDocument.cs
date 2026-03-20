@@ -31,7 +31,7 @@ public class KnowledgeDocument : Entity<Guid>
     /// <summary>
     /// MIME类型，如application/pdf
     /// </summary>
-    public string ContentType { get; set; } = null!;
+    public FileType ContentType { get; set; }
     /// <summary>
     /// 状态，如待处理、处理中、已处理、处理失败
     /// </summary>
@@ -62,7 +62,7 @@ public class KnowledgeDocument : Entity<Guid>
         string fileName, 
         string filePath, 
         long fileSize, 
-        string contentType, 
+        FileType contentType, 
         string? fileHash = null)
     {
         if (string.IsNullOrWhiteSpace(fileName))
@@ -71,8 +71,6 @@ public class KnowledgeDocument : Entity<Guid>
             throw new ArgumentException("文件路径不能为空", nameof(filePath));
         if (fileSize <= 0)
             throw new ArgumentException("文件大小必须大于0", nameof(fileSize));
-        if (string.IsNullOrWhiteSpace(contentType))
-            throw new ArgumentException("内容类型不能为空", nameof(contentType));
 
         var document = new KnowledgeDocument
         {
@@ -81,12 +79,10 @@ public class KnowledgeDocument : Entity<Guid>
             FileName = fileName.Trim(),
             FilePath = filePath.Trim(),
             FileSize = fileSize,
-            ContentType = contentType.Trim(),
+            ContentType = contentType,
             Status = DocumentStatus.Pending,
             ChunkCount = 0,
-            FileHash = fileHash,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
+            FileHash = fileHash
         };
 
         return document;
@@ -98,13 +94,12 @@ public class KnowledgeDocument : Entity<Guid>
     public void UpdateStatus(DocumentStatus status)
     {
         Status = status;
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
     /// 添加知识块到文档
     /// </summary>
-    public KnowledgeChunk AddChunk(string content, int sequenceNumber, string? metadata = null)
+    public KnowledgeChunk CreateChunk(string content, int sequenceNumber, string? metadata = null)
     {
         if (string.IsNullOrWhiteSpace(content))
             throw new ArgumentException("知识块内容不能为空", nameof(content));
@@ -117,14 +112,10 @@ public class KnowledgeDocument : Entity<Guid>
             DocumentId = this.Id,
             Content = content.Trim(),
             ChunkIndex = sequenceNumber,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
+            Document = this,
         };
-
-        Chunks ??= new List<KnowledgeChunk>();
-        Chunks.Add(chunk);
+        Chunks?.Add(chunk);
         ChunkCount++;
-        ModifiedAt = DateTime.UtcNow;
 
         return chunk;
     }
@@ -140,7 +131,6 @@ public class KnowledgeDocument : Entity<Guid>
 
         Chunks?.Remove(chunk);
         ChunkCount = Math.Max(0, ChunkCount - 1);
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -153,7 +143,6 @@ public class KnowledgeDocument : Entity<Guid>
 
         Status = DocumentStatus.Processed;
         ChunkCount = chunkCount;
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -162,7 +151,6 @@ public class KnowledgeDocument : Entity<Guid>
     public void MarkAsFailed()
     {
         Status = DocumentStatus.Failed;
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>

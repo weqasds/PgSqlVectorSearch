@@ -20,6 +20,7 @@ internal class MigrationDesignTimeFactory : IDesignTimeDbContextFactory<RagDbCon
                     options.MapEnum<RelationType>("relation_type");
                     options.MapEnum<EntityType>("entity_type");
                     options.MapEnum<DocumentStatus>("document_status");
+                    options.MapEnum<FileType>("file_type");
                     options.MigrationsAssembly("DataMigration");
                     options.UseVector();
                 }

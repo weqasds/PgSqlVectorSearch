@@ -10,5 +10,6 @@ public interface IKnowledgeBaseService
     Task<KnowledgeBase> CreateKnowledgeBaseAsync(string name, string description);
     Task<KnowledgeBase> GetKnowledgeBaseAsync(Guid id);
     Task<IEnumerable<KnowledgeBase>> ListKnowledgeBasesAsync();
+    Task<KnowledgeBase> UpdateKnowledgeBaseAsync(Guid id, string name, string description);
     Task DeleteKnowledgeBaseAsync(Guid id);
 }

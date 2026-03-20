@@ -7,6 +7,8 @@ using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
 using Application.ApplicationServiceContract;
 using DomainService.Entities.Chat;
+using ApplicationServiceContract.CrossCutting;
+using ApplicationService.Dto.Request;
 
 namespace Application.ApplicationService;
 
@@ -16,22 +18,26 @@ public class RagChatAppService : IRagChatAppService
     private readonly IRagGenerationService _ragGenerationService;
     private readonly IKnowledgeBaseService _knowledgeBaseService;
     private readonly IChatSessionRepository _chatSessionRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public RagChatAppService(
         IChatService chatService,
         IRagGenerationService ragGenerationService,
         IKnowledgeBaseService knowledgeBaseService,
-        IChatSessionRepository chatSessionRepository)
+        IChatSessionRepository chatSessionRepository,
+        IUnitOfWork unitOfWork)
     {
         _chatService = chatService;
         _ragGenerationService = ragGenerationService;
         _knowledgeBaseService = knowledgeBaseService;
         _chatSessionRepository = chatSessionRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ChatSessionDto> CreateChatSessionAsync(Guid userId, string title)
     {
         var session = await _chatService.CreateSessionAsync(userId, title);
+        await _unitOfWork.SaveChangesAsync();
         return await MapToDtoAsync(session);
     }
 
@@ -64,7 +70,7 @@ public class RagChatAppService : IRagChatAppService
 
         // Add assistant message to session
         await _chatService.AddMessageAsync(sessionId, ragResponse.Answer, ChatRole.Assistant);
-
+        await _unitOfWork.SaveChangesAsync();
         // Map to DTO
         return new ChatResponseDto
         {
@@ -143,6 +149,55 @@ public class RagChatAppService : IRagChatAppService
             Content = retrievalResult.Chunk.Content,
             SourceDocument = retrievalResult.Chunk.Document?.FileName ?? "Unknown",
             SimilarityScore = retrievalResult.SimilarityScore
+        };
+    }
+
+    public async Task<ChatSessionDto> GetChatSessionByIdAsync(Guid sessionId)
+    {
+        var session = await _chatSessionRepository.GetByIdAsync(sessionId);
+        if (session == null)
+        {
+            throw new ArgumentException($"Chat session with id {sessionId} not found.");
+        }
+
+        return await MapToDtoAsync(session);
+    }
+
+    public async Task DeleteChatSessionAsync(Guid sessionId)
+    {
+        var session = await _chatSessionRepository.GetByIdAsync(sessionId);
+        if (session == null)
+        {
+            throw new ArgumentException($"Chat session with id {sessionId} not found.");
+        }
+
+        await _chatSessionRepository.DeleteAsync(session);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<ChatResponseDto> DirectRagAsync(string query, Guid? knowledgeBaseId = null)
+    {
+        // Generate RAG response without session
+        RagResponse ragResponse;
+        if (knowledgeBaseId.HasValue)
+        {
+            ragResponse = await _ragGenerationService.GenerateResponseAsync(
+                query,
+                null,  // No session ID for direct RAG
+                knowledgeBaseId.Value);
+        }
+        else
+        {
+            ragResponse = await _ragGenerationService.GenerateResponseAsync(query, null);
+        }
+        await _unitOfWork.SaveChangesAsync();
+        // Map to DTO
+        return new ChatResponseDto
+        {
+            Answer = ragResponse.Answer,
+            RetrievedChunks = ragResponse.RetrievedChunks.Select(MapToRetrievedChunkDto),
+            SessionId = null,  // No session for direct RAG
+            GeneratedAt = ragResponse.GeneratedAt
         };
     }
 }

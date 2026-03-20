@@ -11,11 +11,13 @@
     <PackageReference Include="Pgvector" Version="0.3.2" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="ServiceContract\" />
     <Folder Include="Services\" />
     <Folder Include="Extension\" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Application\ApplicationService.csproj" />
     <ProjectReference Include="..\..\DomainService\DomainService.csproj" />
   </ItemGroup>
 

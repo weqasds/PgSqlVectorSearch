@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using DomainService.Entities.Core;
 using DomainService.Entities.KnowledgeGraph;
+using DomainService.Entities.VectorSearch;
 
 namespace DomainService.Entities.KnowledgeManagement;
 
@@ -20,7 +21,7 @@ public class KnowledgeChunk : Entity<Guid>
 
     public int ChunkIndex { get; set; }
     public string Content { get; set; } = null!;
-
+    public Embedding Embedding { get; set; } = null!;
     /// <summary>
     /// 作为源的知识关系
     /// </summary>

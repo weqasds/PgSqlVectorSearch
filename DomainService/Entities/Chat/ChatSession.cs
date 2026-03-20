@@ -51,8 +51,6 @@ public class ChatSession : Entity<Guid>
             UserId = userId,
             ChatTitle = chatTitle.Trim(),
             KnowledgeBaseId = knowledgeBaseId,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
             Messages = new List<ChatMessage>()
         };
 
@@ -68,7 +66,6 @@ public class ChatSession : Entity<Guid>
             throw new ArgumentException("对话标题不能为空", nameof(chatTitle));
 
         ChatTitle = chatTitle.Trim();
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -85,13 +82,9 @@ public class ChatSession : Entity<Guid>
             ChatSessionId = this.Id,
             Content = content.Trim(),
             Role = role,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
         };
 
         Messages.Add(message);
-        ModifiedAt = DateTime.UtcNow;
-
         return message;
     }
 
@@ -104,7 +97,6 @@ public class ChatSession : Entity<Guid>
         if (message != null)
         {
             Messages.Remove(message);
-            ModifiedAt = DateTime.UtcNow;
         }
     }
 
@@ -114,7 +106,6 @@ public class ChatSession : Entity<Guid>
     public void SetKnowledgeBase(Guid? knowledgeBaseId)
     {
         KnowledgeBaseId = knowledgeBaseId;
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -127,7 +118,6 @@ public class ChatSession : Entity<Guid>
         {
             referencedIds.Add(knowledgeBaseId);
             ReferencedKnowledgeBaseIds = JsonSerializer.Serialize(referencedIds);
-            ModifiedAt = DateTime.UtcNow;
         }
     }
 
@@ -141,7 +131,6 @@ public class ChatSession : Entity<Guid>
         {
             referencedIds.Remove(knowledgeBaseId);
             ReferencedKnowledgeBaseIds = referencedIds.Count > 0 ? JsonSerializer.Serialize(referencedIds) : null;
-            ModifiedAt = DateTime.UtcNow;
         }
     }
 

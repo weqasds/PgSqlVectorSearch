@@ -10,7 +10,9 @@ using Infrastructure.SemanticKernelAI.Extensions;
 using InfrastructureShared.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using PgSqlVectorSearch.Middleware;
 using Scalar.AspNetCore;
 using System.Text;
@@ -24,7 +26,7 @@ public class Program
 
         // 配置数据库连接字符串
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                              "Host=localhost;Database=rag_db;Username=postgres;Password=@qq13015361197";
+                              "Host=localhost;Database=rag_db;Username=postgres;Password=@qq13015461197";
 
         // 配置JWT认证
         var jwtSettingsSection = builder.Configuration.GetSection("JwtSettings");
@@ -32,16 +34,20 @@ public class Program
         var jwtSettings = jwtSettingsSection.Get<JwtSettings>() ?? new JwtSettings();
 
         // 1. DbContext注册
-        builder.Services.AddDbContext<RagDbContext>(options =>{
+        //builder.Services.AddScoped<AuditSaveChangesInterceptor>();
+        builder.Services.AddScoped<ISaveChangesInterceptor, AuditSaveChangesInterceptor>();
+        builder.Services.AddDbContext<RagDbContext>((serviceProvider, options) =>{
             options.UseNpgsql(connectionString, option =>
             {
                 option.MapEnum<ChatRole>("chat_role");
                 option.MapEnum<RelationType>("relation_type");
                 option.MapEnum<EntityType>("entity_type");
-                option.UseVector();
                 option.MapEnum<DocumentStatus>("document_status");
+                option.MapEnum<FileType>("file_type");
+                option.UseVector();
+
             });
-            
+            options.AddInterceptors(serviceProvider.GetServices<ISaveChangesInterceptor>());
         });
 
         // 2. JWT认证配置
@@ -64,20 +70,23 @@ public class Program
                 ClockSkew = TimeSpan.FromSeconds(jwtSettings.ClockSkewSeconds)
             };
         });
-
+        builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
         // 3. HttpContextAccessor注册(非中间管道代码获取http上下文需要)
         builder.Services.AddHttpContextAccessor();
-
+        // builder.Logging.ClearProviders();
+        // builder.Logging.AddConsole();
+        // builder.Logging.AddDebug();
+        // builder.Logging.AddEventSourceLogger();
         #region 基础设施层服务注册
-        builder.Services.AddInfrastructureSharedServices();
-        builder.Services.AddEFCoreInfrastructureServices();
-        builder.Services.AddSemanticKernelAIServices();
+            builder.Services.AddInfrastructureSharedServices();
+            builder.Services.AddEFCoreInfrastructureServices();
+            builder.Services.AddSemanticKernelAIServices();
         #endregion
         #region 领域层服务注册
-        builder.Services.AddDomainServices();
+            builder.Services.AddDomainServices();
         #endregion
         #region 应用层服务注册
-        builder.Services.AddApplicationServices();
+            builder.Services.AddApplicationServices();
         #endregion
 
         // 10. 授权策略
@@ -93,7 +102,39 @@ public class Program
         builder.Services.AddControllers();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
+        builder.Services.AddOpenApi(options =>
+        {
+            options.AddDocumentTransformer((document, context, cancellationToken) =>
+            {
+                document.Components ??= new OpenApiComponents();
+                document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+
+                document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Name = "Authorization",
+                    Description = "JWT Authorization header using Bearer scheme."
+                };
+                return Task.CompletedTask;
+            });
+            options.AddOperationTransformer((operation, context, cancellationToken) =>
+            {
+                operation.Security ??= new List<OpenApiSecurityRequirement>();
+
+                operation.Security.Add(
+                    new OpenApiSecurityRequirement
+                    {
+                        [
+                            new OpenApiSecuritySchemeReference("Bearer")    
+                        ] = new List<string>()
+                    });
+
+                return Task.CompletedTask;
+            });
+        });
         var app = builder.Build();
         app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
         // Configure the HTTP request pipeline.

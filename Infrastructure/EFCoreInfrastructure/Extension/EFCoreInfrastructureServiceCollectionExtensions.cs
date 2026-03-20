@@ -1,4 +1,6 @@
 using Application.QueryServices;
+using ApplicationServiceContract.CrossCutting;
+using DomainService.Entities.System;
 using DomainService.Entities.VectorSearch;
 using DomainService.ServiceContract.CrossCutting;
 using DomainService.ServiceContract.Repositories;
@@ -25,18 +27,23 @@ public static class EFCoreInfrastructureServiceCollectionExtensions
         services.AddScoped<IKnowledgeDocumentRepository, KnowledgeDocumentRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
-        services.AddScoped<IRepository<Embedding>, EmbeddingRepository>();
+        //services.AddScoped<IRepository<Embedding>, EmbeddingRepository>();
         services.AddScoped<IVectorStore, EmbeddingRepository>();
         services.AddScoped<IRagGenerationRepository, RagGenerationRepository>();
         services.AddScoped<IRagRetrievalLogRepository, RagRetrievalLogRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
         // 2. 注册查询服务实现
+        //uof单元注册
+        //保证无论是使用IUnitOfWork还是使用上下文都是同一个实例
+        services.AddScoped<IUnitOfWork>(sp=>sp.GetRequiredService<RagDbContext>());
+        //通用查询服务注册
         services.AddScoped<IQueryService<Embedding>, VectorSearchQueryService>();
+        services.AddScoped<IQueryService<AuditLog>, AuditLogQueryService>();
+
         services.AddScoped<IVectorSearchQueryService, VectorSearchQueryService>();
         services.AddScoped<IKnowledgeBaseQueryService, KnowledgeBaseQueryService>();
         services.AddScoped<IKnowledgeChunkQueryService, KnowledgeChunkQueryService>();
-
         return services;
     }
 }

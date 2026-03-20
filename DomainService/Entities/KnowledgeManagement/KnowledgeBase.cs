@@ -62,9 +62,7 @@ public class KnowledgeBase : Entity<Guid>
             Name = name.Trim(),
             Description = description.Trim(),
             OwnerId = ownerId,
-            IsPublic = false,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
+            IsPublic = false
         };
 
         return knowledgeBase;
@@ -73,7 +71,11 @@ public class KnowledgeBase : Entity<Guid>
     /// <summary>
     /// 添加文档到知识库
     /// </summary>
-    public KnowledgeDocument AddDocument(string fileName, string filePath, long fileSize, string contentType, string? fileHash = null)
+    public KnowledgeDocument AddDocument(string fileName, 
+        string filePath,
+        long fileSize, 
+        FileType contentType, 
+        string? fileHash = null)
     {
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("文件名不能为空", nameof(fileName));
@@ -81,15 +83,11 @@ public class KnowledgeBase : Entity<Guid>
             throw new ArgumentException("文件路径不能为空", nameof(filePath));
         if (fileSize <= 0)
             throw new ArgumentException("文件大小必须大于0", nameof(fileSize));
-        if (string.IsNullOrWhiteSpace(contentType))
-            throw new ArgumentException("内容类型不能为空", nameof(contentType));
 
         var document = KnowledgeDocument.Create(this.Id, fileName, filePath, fileSize, contentType, fileHash);
 
         Documents ??= new List<KnowledgeDocument>();
         Documents.Add(document);
-
-        ModifiedAt = DateTime.UtcNow;
 
         return document;
     }
@@ -104,7 +102,6 @@ public class KnowledgeBase : Entity<Guid>
             throw new InvalidOperationException($"文档 {documentId} 不存在于知识库中");
 
         Documents?.Remove(document);
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -113,7 +110,6 @@ public class KnowledgeBase : Entity<Guid>
     public void SetPublic(bool isPublic)
     {
         IsPublic = isPublic;
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -128,7 +124,6 @@ public class KnowledgeBase : Entity<Guid>
 
         Name = name.Trim();
         Description = description.Trim();
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -154,9 +149,7 @@ public class KnowledgeBase : Entity<Guid>
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 KnowledgeBaseId = this.Id,
-                AccessLevel = accessLevel,
-                CreatedAt = DateTime.UtcNow,
-                ModifiedAt = DateTime.UtcNow
+                AccessLevel = accessLevel
             };
             UserAccesses.Add(userAccess);
         }
@@ -164,9 +157,8 @@ public class KnowledgeBase : Entity<Guid>
         {
             // 更新现有记录的权限级别
             existingAccess.AccessLevel = accessLevel;
-            existingAccess.ModifiedAt = DateTime.UtcNow;
+
         }
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -178,7 +170,6 @@ public class KnowledgeBase : Entity<Guid>
         if (userAccess != null)
         {
             UserAccesses?.Remove(userAccess);
-            ModifiedAt = DateTime.UtcNow;
         }
     }
 
@@ -222,8 +213,6 @@ public class KnowledgeBase : Entity<Guid>
         }
 
         existingAccess.AccessLevel = accessLevel;
-        existingAccess.ModifiedAt = DateTime.UtcNow;
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>

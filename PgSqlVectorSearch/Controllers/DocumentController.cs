@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Application.ApplicationServiceContract;
-using Application.Dto;
+using Application.ApplicationServiceContract.DocumentationService;
+
 
 namespace PgSqlVectorSearch.Controllers;
 
@@ -36,9 +37,19 @@ public class DocumentController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<DocumentDto>> GetDocument(Guid id)
     {
-        // Note: GetDocumentById method not defined in interface
-        // For now, return Not Implemented
-        return StatusCode(501, "Get document by ID not implemented");
+        try
+        {
+            var result = await _documentManagementAppService.GetDocumentByIdAsync(id);
+            return Ok(result);
+        }
+        catch (ArgumentException ex) when (ex.Message.Contains("not found"))
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Get document failed: {ex.Message}");
+        }
     }
 
     [HttpDelete("{id}")]
@@ -56,10 +67,20 @@ public class DocumentController : ControllerBase
     }
 
     [HttpGet("{id}/chunks")]
-    public async Task<ActionResult> GetDocumentChunks(Guid id)
+    public async Task<ActionResult<IEnumerable<KnowledgeChunkDto>>> GetDocumentChunks(Guid id)
     {
-        // Note: GetDocumentChunks method not defined in interface
-        // May need to be added to IDocumentManagementAppService or use domain service
-        return StatusCode(501, "Get document chunks not implemented");
+        try
+        {
+            var result = await _documentManagementAppService.GetDocumentChunksAsync(id);
+            return Ok(result);
+        }
+        catch (ArgumentException ex) when (ex.Message.Contains("not found"))
+        {
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Get document chunks failed: {ex.Message}");
+        }
     }
 }

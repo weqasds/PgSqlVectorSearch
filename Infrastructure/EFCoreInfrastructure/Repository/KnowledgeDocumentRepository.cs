@@ -49,4 +49,8 @@ public class KnowledgeDocumentRepository : RepositoryBase<KnowledgeDocument>, IK
     {
         return await _context.KnowledgeChunks.CountAsync(c => c.DocumentId == documentId);
     }
+    public async Task AddChunksAsync(IEnumerable<KnowledgeChunk> knowledgeChunks)
+    {
+        await _context.Set<KnowledgeChunk>().AddRangeAsync(knowledgeChunks);
+    }
 }

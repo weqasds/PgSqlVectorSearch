@@ -21,10 +21,15 @@ public class OpenAIEmbeddingService : IEmbeddingService
     private readonly Kernel _kernel;
     private readonly string _embeddingModelName;
     private readonly int _embeddingDimension;
+    private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;
 
-    public OpenAIEmbeddingService(Kernel kernel, string embeddingModelName = "text-embedding-3-small", int embeddingDimension = 1536)
+    public OpenAIEmbeddingService(Kernel kernel,
+        IEmbeddingGenerator<string,Embedding<float>> embeddingGenerator,
+        string embeddingModelName = "text-embedding-3-small", 
+        int embeddingDimension = 1536)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+        _embeddingGenerator = embeddingGenerator;
         _embeddingModelName = embeddingModelName;
         _embeddingDimension = embeddingDimension;
     }
@@ -38,8 +43,7 @@ public class OpenAIEmbeddingService : IEmbeddingService
         {
             //ITextEmbeddingGenerationService
             // 使用Semantic Kernel生成嵌入
-            var embedding = await _kernel.Services.GetService<IEmbeddingGenerator<string, Embedding<float>>>().
-                                    GenerateAsync(text);
+            var embedding = await _embeddingGenerator.GenerateAsync(text);
 
             // 转换为Pgvector.Vector
             var vectorValues = embedding.Vector.ToArray();
@@ -62,7 +66,7 @@ public class OpenAIEmbeddingService : IEmbeddingService
 
         try
         {
-            var embeddings = await _kernel.Services.GetService<IEmbeddingGenerator<string, Embedding<float>>>().
+            var embeddings = await _embeddingGenerator.
                                 GenerateAsync(textList);
 
             var vectors = new List<Vector>();

@@ -9,10 +9,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\**" />
     <Compile Remove="Services\**" />
+    <Content Remove="Models\**" />
     <Content Remove="Services\**" />
+    <EmbeddedResource Remove="Models\**" />
     <EmbeddedResource Remove="Services\**" />
+    <None Remove="Models\**" />
     <None Remove="Services\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="FileStorage\25a1051c-54e8-49c5-b523-9af50372b4cd.zip" />
+    <None Remove="FileStorage\7275156c-3462-4ad0-98fa-bfb5a359d2a3.zip" />
+    <None Remove="FileStorage\e472ee35-f825-4281-8a26-8cdcbfaceda2.zip" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,6 +7,7 @@ using DomainService.ServiceContract.Repositories;
 using Application.ApplicationServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 using Application.QueryServices;
+using ApplicationServiceContract.CrossCutting;
 
 namespace Application.ApplicationService;
 
@@ -19,6 +20,7 @@ public class SystemAdminAppService : ISystemAdminAppService
     private readonly ISystemMetricsCollector _systemMetricsCollector;
     private readonly IRagGenerationRepository _ragGenerationRepository;
     private readonly IRagRetrievalLogRepository _ragRetrievalLogRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public SystemAdminAppService(
         IKnowledgeDocumentRepository knowledgeDocumentRepository,
@@ -27,7 +29,8 @@ public class SystemAdminAppService : ISystemAdminAppService
         IChatSessionRepository chatSessionRepository,
         ISystemMetricsCollector systemMetricsCollector,
         IRagGenerationRepository ragGenerationRepository,
-        IRagRetrievalLogRepository ragRetrievalLogRepository)
+        IRagRetrievalLogRepository ragRetrievalLogRepository,
+        IUnitOfWork unitOfWork)
     {
         _knowledgeDocumentRepository = knowledgeDocumentRepository;
         _knowledgeChunkQueryService = knowledgeChunkQueryService;
@@ -36,6 +39,7 @@ public class SystemAdminAppService : ISystemAdminAppService
         _systemMetricsCollector = systemMetricsCollector;
         _ragGenerationRepository = ragGenerationRepository;
         _ragRetrievalLogRepository = ragRetrievalLogRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<SystemStatusDto> GetSystemStatusAsync()
@@ -79,7 +83,7 @@ public class SystemAdminAppService : ISystemAdminAppService
             Load = load
         };
     }
-
+    
     public async Task<SystemMetricsDto> GetSystemMetricsAsync(TimeRange range)
     {
         // Get actual system data from repositories
@@ -165,9 +169,7 @@ public class SystemAdminAppService : ISystemAdminAppService
         await _ragGenerationRepository.DeleteGenerationsAsync(oldGenerations);
 
         // Save changes (if using unit of work pattern)
-        await _ragRetrievalLogRepository.SaveChangesAsync();
-        await _ragGenerationRepository.SaveChangesAsync();
-        await _chatSessionRepository.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
     }
 
     private async Task<bool> IsDatabaseConnectedAsync()

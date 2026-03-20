@@ -4,7 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Application.QueryServices;
-using DomainService.Entities.Core;using DomainService.Entities.KnowledgeManagement;using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
+using DomainService.Entities.Core;
+using DomainService.Entities.KnowledgeManagement;
+using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
 using Microsoft.EntityFrameworkCore;
 
 namespace EFCoreInfrastructure.QueryServices;
@@ -14,7 +16,7 @@ namespace EFCoreInfrastructure.QueryServices;
 /// 实现所有复杂查询操作，不包含数据修改功能
 /// </summary>
 /// <typeparam name="T">实体类型</typeparam>
-public abstract class QueryServiceBase<T> : IQueryService<T> where T : Entity<Guid>
+public abstract class QueryServiceBase<T> : IQueryService<T> where T : class
 {
     protected readonly DbSet<T> _dbSet;
     protected readonly DbContext _context;

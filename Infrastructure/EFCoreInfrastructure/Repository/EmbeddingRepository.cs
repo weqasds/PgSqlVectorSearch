@@ -15,10 +15,14 @@ namespace EFCoreInfrastructure.Repository;
 /// 向量存储服务实现，使用EF Core和pgvector进行向量存储和相似性搜索
 /// 作为基础设施层服务，不属于领域层仓储模式
 /// </summary>
-public class EmbeddingRepository : RepositoryBase<Embedding>, IVectorStore
+public class EmbeddingRepository :  IVectorStore
 {
-    public EmbeddingRepository(RagDbContext context) : base(context)
+    private readonly RagDbContext _dbContext;
+    private readonly DbSet<Embedding> _dbSet;
+    public EmbeddingRepository(RagDbContext context, RagDbContext dbContext)
     {
+        _dbContext = dbContext;
+        _dbSet = dbContext.Set<Embedding>();
     }
 
     public async Task<Embedding?> GetByChunkIdAsync(Guid chunkId)
@@ -58,20 +62,18 @@ public class EmbeddingRepository : RepositoryBase<Embedding>, IVectorStore
         var embedding = await GetByChunkIdAsync(chunkId);
         if (embedding != null)
         {
-            await DeleteAsync(embedding);
+            _dbContext.Remove(embedding);
         }
     }
 
-    public new async Task AddAsync(Embedding embedding)
+    public async Task AddAsync(Embedding embedding)
     {
         await _dbSet.AddAsync(embedding);
-        await SaveChangesAsync();
     }
 
-    public new async Task AddRangeAsync(IEnumerable<Embedding> embeddings)
+    public async Task AddRangeAsync(IEnumerable<Embedding> embeddings)
     {
         await _dbSet.AddRangeAsync(embeddings);
-        await SaveChangesAsync();
     }
 
     public async Task<IEnumerable<Embedding>> SearchSimilarWithFilterAsync(

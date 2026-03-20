@@ -2,33 +2,38 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DomainService.Entities.Core;using DomainService.Entities.KnowledgeManagement;using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
+using DomainService.Entities.KnowledgeManagement;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
-using DomainService.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
+using Application.ApplicationServiceContract.DocumentationService;
+using ApplicationServiceContract.CrossCutting;
 
 namespace Application.ApplicationService;
 
 public class KnowledgeBaseAppService : IKnowledgeBaseAppService
 {
     private readonly IKnowledgeBaseService _knowledgeBaseService;
-    private readonly IDocumentProcessingService _documentProcessingService;
+    private readonly IDocumentManagementAppService _documentManageAppService;
     private readonly IKnowledgeDocumentRepository _knowledgeDocumentRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public KnowledgeBaseAppService(
         IKnowledgeBaseService knowledgeBaseService,
-        IDocumentProcessingService documentProcessingService,
-        IKnowledgeDocumentRepository knowledgeDocumentRepository)
+        IDocumentManagementAppService documentManagementAppService,
+        IKnowledgeDocumentRepository knowledgeDocumentRepository,
+        IUnitOfWork unitOfWork)
     {
         _knowledgeBaseService = knowledgeBaseService;
-        _documentProcessingService = documentProcessingService;
+        _documentManageAppService = documentManagementAppService;
         _knowledgeDocumentRepository = knowledgeDocumentRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<KnowledgeBaseDto> CreateKnowledgeBaseAsync(CreateKnowledgeBaseRequest request)
     {
         var knowledgeBase = await _knowledgeBaseService.CreateKnowledgeBaseAsync(request.Name, request.Description);
+        await _unitOfWork.SaveChangesAsync();
         return await MapToDtoAsync(knowledgeBase);
     }
 
@@ -65,16 +70,17 @@ public class KnowledgeBaseAppService : IKnowledgeBaseAppService
         };
     }
 
-    public async Task UploadDocumentAsync(Guid knowledgeBaseId, UploadDocumentRequest request)
+    public async Task UploadDocumentAsync(Guid knowledgeBaseId, FileUpload fileUpload)
     {
         // Validate knowledge base exists
         await _knowledgeBaseService.GetKnowledgeBaseAsync(knowledgeBaseId);
 
         // Upload document via document processing service
-        await _documentProcessingService.UploadDocumentAsync(
+        await _documentManageAppService.UploadDocumentAsync(
             knowledgeBaseId,
-            request.File.Content,
-            request.FileName ?? request.File.FileName);
+            fileUpload
+        );
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task ProcessKnowledgeBaseAsync(Guid knowledgeBaseId)
@@ -84,9 +90,22 @@ public class KnowledgeBaseAppService : IKnowledgeBaseAppService
 
         // Process each document asynchronously
         var processingTasks = documents.Select(doc =>
-            _documentProcessingService.ProcessDocumentAsync(doc.Id));
-
+            _documentManageAppService.ProcessDocumentAsync(doc.Id));
+        //await _unitOfWork.SaveChangesAsync();
         await Task.WhenAll(processingTasks);
+    }
+
+    public async Task<KnowledgeBaseDto> UpdateKnowledgeBaseAsync(Guid id, CreateKnowledgeBaseRequest request)
+    {
+        var updatedKnowledgeBase = await _knowledgeBaseService.UpdateKnowledgeBaseAsync(id, request.Name, request.Description);
+        await _unitOfWork.SaveChangesAsync();
+        return await MapToDtoAsync(updatedKnowledgeBase);
+    }
+
+    public async Task DeleteKnowledgeBaseAsync(Guid id)
+    {
+        await _knowledgeBaseService.DeleteKnowledgeBaseAsync(id);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     private async Task<KnowledgeBaseDto> MapToDtoAsync(KnowledgeBase knowledgeBase)

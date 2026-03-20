@@ -8,77 +8,20 @@ using DomainService.ServiceContract.Repositories;
 using DomainService.ServiceContract.CrossCutting;
 namespace DomainService.Services.KnowledgeManagement;
 
-public class DocumentProcessingService : IDocumentProcessingService
+public class DocumentService : IDocumentService
 {
     private readonly IKnowledgeBaseRepository _knowledgeBaseRepository;
     private readonly IKnowledgeDocumentRepository _knowledgeDocumentRepository;
-    private readonly IFileStorageService _fileStorageService;
     private readonly ITaskQueueService _taskQueueService;
 
-    public DocumentProcessingService(
+    public DocumentService(
         IKnowledgeBaseRepository knowledgeBaseRepository,
         IKnowledgeDocumentRepository knowledgeDocumentRepository,
-        IFileStorageService fileStorageService,
         ITaskQueueService taskQueueService)
     {
         _knowledgeBaseRepository = knowledgeBaseRepository;
         _knowledgeDocumentRepository = knowledgeDocumentRepository;
-        _fileStorageService = fileStorageService;
         _taskQueueService = taskQueueService;
-    }
-
-    public async Task<KnowledgeDocument> UploadDocumentAsync(Guid knowledgeBaseId, Stream fileStream, string fileName)
-    {
-        // 验证知识库是否存在
-        var knowledgeBase = await _knowledgeBaseRepository.GetByIdAsync(knowledgeBaseId);
-        if (knowledgeBase == null || knowledgeBase.IsDeleted)
-            throw new KeyNotFoundException($"未找到ID为 {knowledgeBaseId} 的知识库");
-
-        // 上传文件到存储服务
-        var fileId = await _fileStorageService.UploadFileAsync(fileStream, fileName, "application/octet-stream");
-
-        // 创建文档记录
-        var document =  KnowledgeDocument.Create(
-            knowledgeBaseId: knowledgeBaseId,
-            fileName: fileName,
-            filePath: fileId, // 存储服务返回的文件ID或路径
-            fileSize: fileStream.Length,
-            contentType: "application/octet-stream",
-            fileHash: null // 可选：计算文件哈希值以防止重复上传
-        );
-
-        await _knowledgeDocumentRepository.AddAsync(document);
-
-        // 异步触发文档处理任务
-        await _taskQueueService.EnqueueDocumentProcessingAsync(document.Id);
-
-        return document;
-    }
-
-    public async Task ProcessDocumentAsync(Guid documentId)
-    {
-        var document = await _knowledgeDocumentRepository.GetByIdAsync(documentId);
-        if (document == null || document.IsDeleted)
-            throw new KeyNotFoundException($"未找到ID为 {documentId} 的文档");
-
-        // TODO: 实现文档处理逻辑，包括：
-        // 1. 从文件存储下载文件
-        // 2. 解析文档内容（支持PDF、Word、TXT等格式）
-        // 3. 分块处理文本
-        // 4. 为每个分块生成向量
-        // 5. 保存分块和向量到数据库
-
-        // 临时实现：创建示例分块
-        var sampleChunk = document.AddChunk($"这是文档 '{document.FileName}' 的示例分块内容。", 0);
-
-        // 更新文档状态为已处理
-        document.MarkAsProcessed(1); // 假设处理了1个块
-
-        // 保存文档变更（包括新知识块）
-        await _knowledgeDocumentRepository.UpdateAsync(document);
-
-        // 异步触发向量生成任务
-        await _taskQueueService.EnqueueVectorGenerationAsync(sampleChunk.Id);
     }
 
     public async Task<KnowledgeDocument?> FindDuplicateDocumentAsync(Guid knowledgeBaseId, string fileHash)

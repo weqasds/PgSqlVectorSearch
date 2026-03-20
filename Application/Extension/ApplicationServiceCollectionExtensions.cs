@@ -1,5 +1,6 @@
 using Application.ApplicationService;
 using Application.ApplicationServiceContract;
+using Application.ApplicationServiceContract.DocumentationService;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application.Extensions;

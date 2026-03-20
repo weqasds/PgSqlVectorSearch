@@ -55,6 +55,28 @@ public class KnowledgeBaseService : IKnowledgeBaseService
         return activeBases;
     }
 
+    public async Task<KnowledgeBase> UpdateKnowledgeBaseAsync(Guid id, string name, string description)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("知识库名称不能为空", nameof(name));
+
+        var knowledgeBase = await _knowledgeBaseRepository.GetByIdAsync(id);
+        if (knowledgeBase == null || knowledgeBase.IsDeleted)
+            throw new KeyNotFoundException($"未找到ID为 {id} 的知识库");
+
+        // 如果名称已更改，检查名称是否已存在（排除自身）
+        if (!string.Equals(knowledgeBase.Name, name, StringComparison.OrdinalIgnoreCase))
+        {
+            var exists = await _knowledgeBaseRepository.ExistsByNameAsync(name);
+            if (exists)
+                throw new InvalidOperationException($"知识库名称 '{name}' 已存在");
+        }
+
+        knowledgeBase.UpdateInfo(name, description);
+        await _knowledgeBaseRepository.UpdateAsync(knowledgeBase);
+        return knowledgeBase;
+    }
+
     public async Task DeleteKnowledgeBaseAsync(Guid id)
     {
         var knowledgeBase = await _knowledgeBaseRepository.GetByIdAsync(id);

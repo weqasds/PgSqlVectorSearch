@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Application.ApplicationServiceContract;
 using Application.Dto;
+using ApplicationService.Dto.Request;
 
 namespace PgSqlVectorSearch.Controllers;
 
@@ -14,7 +15,11 @@ public class AuthController : ControllerBase
     {
         _authAppService = authAppService;
     }
-
+    /// <summary>
+    /// 登录
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
@@ -22,6 +27,10 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// 登出
+    /// </summary>
+    /// <returns></returns>
     [HttpPost("logout")]
     public async Task<ActionResult> Logout()
     {
@@ -36,6 +45,10 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// 获取当前用户信息
+    /// </summary>
+    /// <returns></returns>
     [HttpGet("user")]
     public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
@@ -47,6 +60,11 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// 注册
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     [HttpPost("register")]
     public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request)
     {
@@ -54,13 +72,21 @@ public class AuthController : ControllerBase
         return CreatedAtAction(nameof(GetCurrentUser), result);
     }
 
+    /// <summary>
+    /// 修改密码
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     [HttpPut("password")]
     public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
         await _authAppService.ChangePasswordAsync(request);
         return NoContent();
     }
-
+    /// <summary>
+    /// 从Authorization头中提取Bearer令牌
+    /// </summary>
+    /// <returns></returns>
     private string? ExtractTokenFromHeader()
     {
         if (Request.Headers.TryGetValue("Authorization", out var authHeader))

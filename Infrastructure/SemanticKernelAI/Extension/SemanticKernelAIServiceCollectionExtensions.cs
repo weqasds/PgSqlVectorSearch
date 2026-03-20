@@ -1,8 +1,8 @@
 using DomainService.ServiceContract.CrossCutting;
-using Infrastructure.SemanticKernelAI.ServiceContract;
 using Infrastructure.SemanticKernelAI.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
+using Application.ApplicationServiceContract.AI;
 
 namespace Infrastructure.SemanticKernelAI.Extensions;
 
@@ -18,14 +18,17 @@ public static class SemanticKernelAIServiceCollectionExtensions
     /// <returns>服务集合，支持链式调用</returns>
     public static IServiceCollection AddSemanticKernelAIServices(this IServiceCollection services)
     {
-        // 1. 注册Kernel单例（Semantic Kernel核心）
-        services.AddSingleton<Kernel>();
-
+        //services.
+        // 注册语义内核服务
+#pragma warning disable
+        services.AddKernel().
+            AddOpenAIChatCompletion("").
+            AddOpenAIEmbeddingGenerator("");
         // 2. 注册AI相关服务
         services.AddScoped<IEmbeddingService, OpenAIEmbeddingService>();
         services.AddScoped<ILLMService, OpenAILLMService>();
         services.AddScoped<ISemanticKernelService, SemanticKernelService>();
-
+        
         return services;
     }
 }

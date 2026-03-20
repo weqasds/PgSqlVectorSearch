@@ -1,9 +1,11 @@
 <Solution>
   <Project Path="PgSqlVectorSearch/PgSqlVectorSearch.csproj" />
+  <Folder Name="/Infrastructure/">
+    <Project Path="DataMigration/DataMigration.csproj" />
+    <Project Path="Infrastructure/EFCoreInfrastructure/EFCoreInfrastructure.csproj" Id="8497fa43-28c4-4948-998c-20f7df9fb1cb" />
+    <Project Path="Infrastructure/InfrastructureShared/InfrastructureShared.csproj" Id="e5a1c2d3-9f4b-4a5e-8c6d-7b2a1f9e8c3d" />
+    <Project Path="Infrastructure/SemanticKernelAI/SemanticKernelAI.csproj" Id="d1c8e5b9-7a3e-4c8b-9f0e-2a1b6c9f8e5a" />
+  </Folder>
   <Project Path="Application/ApplicationService.csproj" Id="d278ddd6-f70b-4546-9878-64561e349c04" />
   <Project Path="DomainService/DomainService.csproj" Id="df583fa7-347b-4b32-b014-86359019a94d" />
-  <Project Path="Infrastructure/EFCoreInfrastructure/EFCoreInfrastructure.csproj" Id="8497fa43-28c4-4948-998c-20f7df9fb1cb" />
-  <Project Path="Infrastructure/SemanticKernelAI/SemanticKernelAI.csproj" Id="d1c8e5b9-7a3e-4c8b-9f0e-2a1b6c9f8e5a" />
-  <Project Path="Infrastructure/InfrastructureShared/InfrastructureShared.csproj" Id="e5a1c2d3-9f4b-4a5e-8c6d-7b2a1f9e8c3d" />
-  <Project Path="DataMigration/DataMigration.csproj" />
 </Solution>

@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Application.Dto;
+using ApplicationService.Dto.Request;
 
 namespace Application.ApplicationServiceContract;
 

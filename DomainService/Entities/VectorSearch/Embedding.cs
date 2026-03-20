@@ -7,7 +7,7 @@ using DomainService.Entities.KnowledgeManagement;
 
 namespace DomainService.Entities.VectorSearch;
 
-public class Embedding : Entity<Guid>
+public class Embedding
 {
     public Guid ChunkId { get; set; }
     public KnowledgeChunk Chunk { get; set; } = null!;

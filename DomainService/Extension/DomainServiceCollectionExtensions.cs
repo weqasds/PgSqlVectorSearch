@@ -25,7 +25,7 @@ public static class DomainServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<IKnowledgeBaseService, KnowledgeBaseService>();
-        services.AddScoped<IDocumentProcessingService, DocumentProcessingService>();
+        services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IPromptTemplateService, PromptTemplateService>();
         services.AddScoped<IRagGenerationService, RagGenerationService>();
         services.AddScoped<IVectorRetrievalService, VectorRetrievalService>();

@@ -42,7 +42,6 @@ public class ChatSessionRepository : RepositoryBase<ChatSession>, IChatSessionRe
         if (message != null)
         {
             _context.ChatMessages.Remove(message);
-            await _context.SaveChangesAsync();
         }
     }
 

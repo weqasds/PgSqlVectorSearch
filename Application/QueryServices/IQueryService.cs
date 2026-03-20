@@ -12,7 +12,7 @@ namespace Application.QueryServices;
 /// 遵循CQRS原则，将查询职责与仓储的写职责分离
 /// </summary>
 /// <typeparam name="T">实体类型</typeparam>
-public interface IQueryService<T> where T : Entity<Guid>
+public interface IQueryService<T>
 {
     // 基本查询
     Task<IEnumerable<T>> GetAllAsync();

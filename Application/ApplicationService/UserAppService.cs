@@ -8,6 +8,7 @@ using Application.ApplicationServiceContract;
 using Application.Dto;
 using DomainService.Entities.UserManagement;
 using DomainService.Entities.Chat;
+using ApplicationServiceContract.CrossCutting;
 
 namespace Application.ApplicationService;
 
@@ -15,11 +16,13 @@ public class UserAppService : IUserAppService
 {
     private readonly IUserRepository _userRepository;
     private readonly IChatService _chatService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UserAppService(IUserRepository userRepository, IChatService chatService)
+    public UserAppService(IUserRepository userRepository, IChatService chatService, IUnitOfWork unitOfWork)
     {
         _userRepository = userRepository;
         _chatService = chatService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<UserDto> GetUserAsync(Guid userId)
@@ -41,13 +44,12 @@ public class UserAppService : IUserAppService
             throw new ArgumentException($"User with id {userId} not found.");
         }
 
-        // Update user properties
-        user.Email = request.Email!;
-        user.UserName = request.Username!;
+        // Update user properties based on the request
+        user.UpdateInfo(request.Email!, request.Username!);
         // Add other fields as needed
 
         await _userRepository.UpdateAsync(user);
-
+        await _unitOfWork.SaveChangesAsync();
         return MapToDto(user);
     }
 

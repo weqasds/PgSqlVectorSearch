@@ -17,10 +17,10 @@ public class OpenAILLMService : ILLMService
     private readonly Kernel _kernel;
     private readonly IChatCompletionService _chatCompletionService;
 
-    public OpenAILLMService(Kernel kernel)
+    public OpenAILLMService(Kernel kernel,IChatCompletionService chatCompletionService)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-        _chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
+        _chatCompletionService = chatCompletionService;
     }
 
     public async Task<string> GenerateResponseAsync(string prompt, LLMOptions? options = null)
@@ -30,7 +30,7 @@ public class OpenAILLMService : ILLMService
 
         try
         {
-            var chatHistory = new Microsoft.SemanticKernel.ChatCompletion.ChatHistory();
+            var chatHistory = new ChatHistory();
 
             // 添加系统提示（如果有）
             if (!string.IsNullOrWhiteSpace(options?.SystemPrompt))
@@ -69,7 +69,7 @@ public class OpenAILLMService : ILLMService
         if (string.IsNullOrWhiteSpace(prompt))
             throw new ArgumentException("提示不能为空", nameof(prompt));
 
-        var chatHistory = new Microsoft.SemanticKernel.ChatCompletion.ChatHistory();
+        var chatHistory = new ChatHistory();
 
         // 添加系统提示（如果有）
         if (!string.IsNullOrWhiteSpace(options?.SystemPrompt))

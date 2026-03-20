@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Infrastructure.SemanticKernelAI.ServiceContract;
+using Application.ApplicationServiceContract.AI;
+using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Embeddings;
+using Microsoft.SemanticKernel.TextGeneration;
 using Pgvector;
 
 namespace Infrastructure.SemanticKernelAI.Services;
@@ -18,19 +20,21 @@ namespace Infrastructure.SemanticKernelAI.Services;
 public class SemanticKernelService : ISemanticKernelService
 {
     private readonly Kernel _kernel;
-    private readonly ITextEmbeddingGenerationService _embeddingService;
+    private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;
     private readonly IChatCompletionService _chatCompletionService;
     private readonly string _embeddingModelName;
     private readonly int _embeddingDimension;
 
     public SemanticKernelService(
         Kernel kernel,
+        IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
+        IChatCompletionService chatCompletionService,
         string embeddingModelName = "text-embedding-3-small",
         int embeddingDimension = 1536)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-        _embeddingService = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
-        _chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
+        _chatCompletionService = chatCompletionService;
+        _embeddingGenerator = embeddingGenerator;
         _embeddingModelName = embeddingModelName;
         _embeddingDimension = embeddingDimension;
     }
@@ -41,7 +45,13 @@ public class SemanticKernelService : ISemanticKernelService
         // 这里可以执行任何需要的初始化逻辑
         await Task.CompletedTask;
     }
-
+    /// <summary>
+    /// 生成嵌入向量
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
     public async Task<Vector> GenerateEmbeddingAsync(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -49,8 +59,10 @@ public class SemanticKernelService : ISemanticKernelService
 
         try
         {
-            var embedding = await _embeddingService.GenerateEmbeddingAsync(text);
-            var vectorValues = embedding.ToArray();
+
+            //var embedding1 = await _embeddingService.GenerateEmbeddingAsync(text);
+            var embedding = await _embeddingGenerator.GenerateAsync(text);
+            var vectorValues = embedding.Vector.ToArray();
             return new Vector(vectorValues);
         }
         catch (Exception ex)
@@ -58,7 +70,13 @@ public class SemanticKernelService : ISemanticKernelService
             throw new InvalidOperationException($"生成嵌入向量失败: {ex.Message}", ex);
         }
     }
-
+    /// <summary>
+    /// 生成嵌入向量列表
+    /// </summary>
+    /// <param name="texts"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
     public async Task<IEnumerable<Vector>> GenerateEmbeddingsAsync(IEnumerable<string> texts)
     {
         if (texts == null)
@@ -70,12 +88,12 @@ public class SemanticKernelService : ISemanticKernelService
 
         try
         {
-            var embeddings = await _embeddingService.GenerateEmbeddingsAsync(textList);
-
+            //var embeddings1 = await _embeddingService.GenerateEmbeddingsAsync(textList);
+            var embeddings = await _embeddingGenerator.GenerateAsync(textList);
             var vectors = new List<Vector>();
             foreach (var embedding in embeddings)
             {
-                var vectorValues = embedding.ToArray();
+                var vectorValues = embedding.Vector.ToArray();
                 vectors.Add(new Vector(vectorValues));
             }
 
@@ -86,7 +104,14 @@ public class SemanticKernelService : ISemanticKernelService
             throw new InvalidOperationException($"批量生成嵌入向量失败: {ex.Message}", ex);
         }
     }
-
+    /// <summary>
+    /// 生成响应
+    /// </summary>
+    /// <param name="prompt"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
     public async Task<string> GenerateResponseAsync(string prompt, LLMOptions? options = null)
     {
         if (string.IsNullOrWhiteSpace(prompt))
@@ -128,7 +153,13 @@ public class SemanticKernelService : ISemanticKernelService
             throw new InvalidOperationException($"生成LLM响应失败: {ex.Message}", ex);
         }
     }
-
+    /// <summary>
+    /// 生成响应(流式输出)
+    /// </summary>
+    /// <param name="prompt"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     public async IAsyncEnumerable<string> GenerateResponseStreamAsync(string prompt, LLMOptions? options = null)
     {
         if (string.IsNullOrWhiteSpace(prompt))

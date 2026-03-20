@@ -26,7 +26,6 @@ public class AuditLogRepository : RepositoryBase<AuditLog>, IAuditLogRepository
             return 0;
 
         _dbSet.RemoveRange(toDelete);
-        await _context.SaveChangesAsync();
 
         return toDelete.Count;
     }

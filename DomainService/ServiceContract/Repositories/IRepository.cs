@@ -11,7 +11,7 @@ namespace DomainService.ServiceContract.Repositories;
 /// 复杂查询功能（分页、排序、投影等）已迁移到QueryService
 /// </summary>
 /// <typeparam name="T">实体类型</typeparam>
-public interface IRepository<T> where T : Entity<Guid>
+public interface IRepository<T> where T : class
 {
     // 基本CRUD操作
     Task<T?> GetByIdAsync(Guid id);
@@ -31,7 +31,4 @@ public interface IRepository<T> where T : Entity<Guid>
     Task AddRangeAsync(IEnumerable<T> entities);
     Task UpdateRangeAsync(IEnumerable<T> entities);
     Task DeleteRangeAsync(IEnumerable<T> entities);
-
-    // 工作单元支持
-    Task<int> SaveChangesAsync();
 }

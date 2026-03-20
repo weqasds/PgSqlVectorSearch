@@ -40,28 +40,4 @@ public class AuditLogService : IAuditLogService
 
         await _auditLogRepository.AddAsync(auditLog);
     }
-
-    public async Task<IEnumerable<AuditLog>> QueryLogsAsync(
-    DateTimeOffset? start,
-    DateTimeOffset? end,
-    string? operation)
-    {
-        if (start.HasValue && end.HasValue && start > end)
-            throw new ArgumentException("开始时间不能晚于结束时间", nameof(start));
-
-        var logs = await _auditLogRepository.GetAllAsync();
-
-        var query = logs.Where(log => !log.IsDeleted);
-
-        if (start.HasValue)
-            query = query.Where(log => log.CreatedAt >= start.Value);
-
-        if (end.HasValue)
-            query = query.Where(log => log.CreatedAt <= end.Value);
-
-        if (!string.IsNullOrWhiteSpace(operation))
-            query = query.Where(log => log.Operation.Contains(operation, StringComparison.OrdinalIgnoreCase));
-
-        return query.OrderByDescending(log => log.CreatedAt);
-    }
 }

@@ -155,7 +155,6 @@ public class ChatService : IChatService
         }
 
         session.KnowledgeBaseId = knowledgeBaseId;
-        session.ModifiedAt = DateTime.UtcNow;
         await _chatSessionRepository.UpdateAsync(session);
     }
 
@@ -178,7 +177,6 @@ public class ChatService : IChatService
         {
             referencedIds.Add(knowledgeBaseId);
             session.ReferencedKnowledgeBaseIds = SerializeReferencedKnowledgeBaseIds(referencedIds);
-            session.ModifiedAt = DateTime.UtcNow;
             await _chatSessionRepository.UpdateAsync(session);
         }
     }

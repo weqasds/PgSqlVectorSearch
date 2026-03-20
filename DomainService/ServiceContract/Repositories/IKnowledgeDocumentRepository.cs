@@ -15,4 +15,5 @@ public interface IKnowledgeDocumentRepository : IRepository<KnowledgeDocument>
     Task<int> GetCountByDateAsync(DateOnly date);
     Task<int> GetTotalCountAsync();
     Task<int> GetChunkCountAsync(Guid documentId);
+    Task AddChunksAsync(IEnumerable<KnowledgeChunk> knowledgeChunks);
 }

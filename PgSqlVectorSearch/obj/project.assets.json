@@ -740,6 +740,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
+          "ApplicationService": "1.0.0",
           "DomainService": "1.0.0",
           "Microsoft.SemanticKernel": "1.73.0",
           "Pgvector": "0.3.2"

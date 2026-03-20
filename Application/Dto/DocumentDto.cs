@@ -1,4 +1,6 @@
 using System;
+using Application.Extensions;
+using DomainService.Entities.KnowledgeManagement;
 
 namespace Application.ApplicationServiceContract;
 
@@ -12,4 +14,18 @@ public class DocumentDto
     public DateTimeOffset? UploadedAt { get; set; }
     public string Status { get; set; } = null!; // e.g., "Pending", "Processing", "Processed", "Failed"
     public int ChunkCount { get; set; }
+    public static DocumentDto ToDto(KnowledgeDocument document)
+    {
+        return new DocumentDto
+        {
+            Id = document.Id,
+            FileName = document.FileName,
+            FilePath = document.FilePath,
+            FileSize = document.FileSize,
+            ContentType = document.ContentType.GetMimeType(),
+            UploadedAt = document.CreatedAt,
+            Status = document.Status.ToString(),
+            ChunkCount = document.ChunkCount
+        };
+    }
 }

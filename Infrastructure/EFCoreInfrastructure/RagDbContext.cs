@@ -5,6 +5,7 @@ using System.Text;
 using Pgvector.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 namespace EFCoreInfrastructure;
+
 using DomainService.Entities.Core;
 using DomainService.Entities.KnowledgeManagement;
 using DomainService.Entities.KnowledgeGraph;
@@ -15,7 +16,9 @@ using DomainService.Entities.UserManagement;
 using DomainService.Entities.System;
 using DomainService.Entities.RAG;
 using DomainService.Entities.Analytics;
-public class RagDbContext : DbContext
+using ApplicationServiceContract.CrossCutting;
+
+public class RagDbContext : DbContext, IUnitOfWork
 {
     #region 聚合根实体的dbset
 
@@ -41,7 +44,7 @@ public class RagDbContext : DbContext
     public DbSet<GraphNode> GraphNodes { get; set; }
 
     #endregion
-    
+
     #region 其他实体的dbset
     /// <summary>
     /// RAG检索日志表，包含RAG检索的日志信息
@@ -55,7 +58,7 @@ public class RagDbContext : DbContext
     /// 用户知识库表，包含用户与知识库的关联信息
     /// </summary>
     public DbSet<UserKnowledgeBase> UserKnowledgeBases { get; set; }
-    
+
     /// <summary>
     /// 图边表，包含图结构中的边信息
     /// </summary>
@@ -71,10 +74,10 @@ public class RagDbContext : DbContext
     /// <summary>
     /// 嵌入表，包含向量嵌入的基本信息
     /// </summary>
-    public DbSet<Embedding> Embeddings { get; set; }
+    //public DbSet<Embedding> Embeddings { get; set; }
 
     #endregion
-    
+
     #region 系统实体的dbset，特殊聚合根
 
     /// <summary>
@@ -88,7 +91,7 @@ public class RagDbContext : DbContext
 
 
     #endregion
-    
+
     /// <summary>
     /// Configures conventions for the model by customizing the provided configuration builder.
     /// </summary>
@@ -115,14 +118,16 @@ public class RagDbContext : DbContext
         {
             optionsBuilder.UseNpgsql(
                 "Host=localhost;Port=5432;Database=rag_db;Username=postgres;Password=@qq13015461197",
-                options => {
-                options.MapEnum<ChatRole>("chat_role");
-                options.MapEnum<RelationType>("relation_type");
-                options.MapEnum<EntityType>("entity_type");
-                options.UseVector();
-                options.MigrationsAssembly("DataMigration");
-                options.MapEnum<DocumentStatus>("document_status");
-            });
+                options =>
+                {
+                    options.MapEnum<ChatRole>("chat_role");
+                    options.MapEnum<RelationType>("relation_type");
+                    options.MapEnum<EntityType>("entity_type");
+                    options.MapEnum<DocumentStatus>("document_status");
+                    options.MapEnum<FileType>("file_type");
+                    options.UseVector();
+                    options.MigrationsAssembly("DataMigration");
+                });
         }
         base.OnConfiguring(optionsBuilder);
     }
@@ -148,8 +153,14 @@ public class RagDbContext : DbContext
             entity.ToTable("audit_log");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Operation).IsRequired(true);
-            entity.Property(x => x.UserId).IsRequired(true);
-            entity.Property(x => x.Details).IsRequired(true);
+            entity.Property(x => x.UserId);
+            entity.Property(x => x.Details);
+            entity.Property(x => x.TableName).IsRequired(false);
+            entity.Property(x => x.EntityId).IsRequired(false);
+            entity.Property(x => x.EntityName).IsRequired(false);
+            entity.Property(x => x.OldValues).IsRequired(false);
+            entity.Property(x => x.NewValues).IsRequired(false);
+            entity.Property(x => x.AffectedColumns).IsRequired(false);
         });
 
         #endregion
@@ -173,8 +184,8 @@ public class RagDbContext : DbContext
                 .IsRequired();
 
             entity.Property(x => x.ContentType)
-                .IsRequired()
-                .HasMaxLength(100);
+                .HasColumnType("file_type")   // PostgreSQL enum
+                .IsRequired();
 
             entity.Property(x => x.Status)
                 .HasColumnType("document_status")   // PostgreSQL enum
@@ -188,7 +199,7 @@ public class RagDbContext : DbContext
                 .HasMaxLength(64);
 
             entity.HasOne(x => x.KnowledgeBase)
-                .WithMany()
+                .WithMany(x => x.Documents)
                 .HasForeignKey(x => x.KnowledgeBaseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -291,7 +302,7 @@ public class RagDbContext : DbContext
         #endregion
 
         #region 其他实体的配置
-        
+
         modelBuilder.Entity<ChatMessage>(entity =>
         {
             entity.ToTable("chat_message");
@@ -302,22 +313,9 @@ public class RagDbContext : DbContext
             .WithMany(x => x.Messages)
             .HasForeignKey(x => x.ChatSessionId)
             .OnDelete(DeleteBehavior.Cascade);
-            entity.Property(x=>x.Role).HasColumnType("chat_role");
+            entity.Property(x => x.Role).HasColumnType("chat_role");
             entity.HasIndex(x => x.ChatSessionId);
             entity.HasIndex(x => x.CreatedAt);
-        });
-        modelBuilder.Entity<Embedding>(entity =>
-        {
-            entity.ToTable("embedding");
-            entity.HasKey(x => x.Id);
-            entity.Property(x => x.Vector).
-                HasColumnType("vector(1536)").
-                IsRequired();
-            entity.HasOne(x => x.Chunk)
-                .WithMany()
-                .HasForeignKey(x => x.ChunkId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(x => x.ChunkId).IsUnique();
         });
         modelBuilder.Entity<KnowledgeChunk>(entity =>
         {
@@ -326,12 +324,36 @@ public class RagDbContext : DbContext
             entity.Property(x => x.Content).IsRequired();
             entity.Property(x => x.ChunkIndex).IsRequired();
             entity.HasOne(x => x.Document)
-                .WithMany()
+                .WithMany(x => x.Chunks)
                 .HasForeignKey(x => x.DocumentId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(x => new { x.DocumentId, x.ChunkIndex }).IsUnique();
             entity.HasIndex(x => x.DocumentId);
+            entity.OwnsOne<Embedding>(x => x.Embedding, emb =>
+            {
+                emb.ToTable("embedding");
+                emb.Property(x => x.Vector).
+                    HasColumnType("vector(1536)").
+                    IsRequired();
+                emb.HasIndex(e => e.Vector).
+                    HasMethod("hnsw").
+                    HasOperators("vector_cosine_ops");
+                emb.WithOwner(e => e.Chunk).HasForeignKey(x => x.ChunkId);
+            });
         });
+        //modelBuilder.Entity<Embedding>(entity =>
+        //{
+        //    entity.ToTable("embedding");
+        //    entity.HasKey(x => x.Id);
+        //    entity.Property(x => x.Vector).
+        //        HasColumnType("vector(1536)").
+        //        IsRequired();
+        //    entity.HasOne(x => x.Chunk)
+        //        .WithMany()
+        //        .HasForeignKey(x => x.ChunkId)
+        //        .OnDelete(DeleteBehavior.Cascade);
+        //    entity.HasIndex(x => x.ChunkId).IsUnique();
+        //});
         modelBuilder.Entity<RagRetrievalLog>(entity =>
         {
             entity.ToTable("rag_retrieval_log");
@@ -464,11 +486,32 @@ public class RagDbContext : DbContext
 
         base.OnModelCreating(modelBuilder);
     }
-    public override int SaveChanges()
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellation = default)
     {
         var now = DateTime.UtcNow;
+        Console.WriteLine(ChangeTracker.Entries<Entity<Guid>>().ToList());
+        Console.WriteLine($"{this.GetHashCode()}");
+        var deletedEntries = ChangeTracker.Entries<Entity<Guid>>()
+                .Where(e => e.State == EntityState.Deleted)
+                .ToList();
+        foreach (var entry in deletedEntries)
+        {
+            // 只对已存在的记录进行软删除
+            if (entry.Entity.CreatedAt != default) // 或者检查其他标识已存在的条件
+            {
+                entry.State = EntityState.Modified;
+                entry.Entity.IsDeleted = true;
+                entry.Entity.ModifiedAt = now;
+            }
+            // 如果是新建的实体被标记为删除，直接移除跟踪
+            else
+            {
+                entry.State = EntityState.Detached;
+            }
+        }
         foreach (var entry in ChangeTracker.Entries<Entity<Guid>>())
         {
+            Console.WriteLine($"{entry.Entity.GetType().Name} - {entry.State}");
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedAt = now;
@@ -478,13 +521,8 @@ public class RagDbContext : DbContext
             {
                 entry.Entity.ModifiedAt = now;
             }
-            else if (entry.State == EntityState.Deleted)
-            {
-                entry.Entity.IsDeleted = true;
-                entry.Entity.ModifiedAt = now;
-            }
         }
-        return base.SaveChanges();
+        return await base.SaveChangesAsync(cancellation);
     }
 
 }

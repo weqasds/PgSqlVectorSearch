@@ -12,6 +12,7 @@
 **/appsettings.Development.json
 **/appsettings.Local.json
 备份文件/**
+**/FileStorage
 # Frontend dependencies
 fronted/node_modules/
 fronted/dist/
@@ -33,3 +34,6 @@ logs/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Python
+.veny/

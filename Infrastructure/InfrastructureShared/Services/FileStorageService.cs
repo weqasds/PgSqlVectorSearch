@@ -21,7 +21,7 @@ public class FileStorageService : IFileStorageService
             Directory.CreateDirectory(_storagePath);
     }
 
-    public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType)
+    public async Task<string> UploadFileAsync(Stream fileStream, string fileName)
     {
         if (fileStream == null)
             throw new ArgumentNullException(nameof(fileStream));

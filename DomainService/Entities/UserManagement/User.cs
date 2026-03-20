@@ -57,9 +57,7 @@ public class User : Entity<Guid>
             Id = Guid.NewGuid(),
             UserName = userName.Trim(),
             Email = email.Trim().ToLower(),
-            PasswordHash = passwordHash,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
+            PasswordHash = passwordHash
         };
 
         return user;
@@ -82,7 +80,6 @@ public class User : Entity<Guid>
 
         UserName = userName.Trim();
         Email = email.Trim().ToLower();
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -94,7 +91,6 @@ public class User : Entity<Guid>
             throw new ArgumentException("密码哈希不能为空", nameof(passwordHash));
 
         PasswordHash = passwordHash;
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>
@@ -108,8 +104,6 @@ public class User : Entity<Guid>
         var session = ChatSession.Create(Id, chatTitle, knowledgeBaseId);
 
         ChatSessions.Add(session);
-        ModifiedAt = DateTime.UtcNow;
-
         return session;
     }
 
@@ -122,7 +116,6 @@ public class User : Entity<Guid>
         if (session != null)
         {
             ChatSessions.Remove(session);
-            ModifiedAt = DateTime.UtcNow;
         }
     }
 
@@ -138,7 +131,6 @@ public class User : Entity<Guid>
 
         CreatedRelations ??= new List<KnowledgeRelation>();
         CreatedRelations.Add(relation);
-        ModifiedAt = DateTime.UtcNow;
     }
 
     /// <summary>

@@ -1,0 +1,62 @@
+{
+  "title": [
+    "Mistral (crater)",
+    "Land of poets",
+    "Premio Gabriela Mistral",
+    "Mistral (pisco)",
+    "Poet-diplomat",
+    "G. K. Chesterton",
+    "Colegio Gabriela Mistral",
+    "Gabriela Mistral University",
+    "Gabriela Mistral",
+    "Pablo de Rokha"
+  ],
+  "sentences": [
+    [
+      "Mistral is a crater on Mercury.",
+      " It has a diameter of 110 kilometers.",
+      " Its name was adopted by the International Astronomical Union in 1976.",
+      " Mistral is named for the Chilean poet Gabriela Mistral, who lived from 1889 to 1957."
+    ],
+    [
+      "The phrase land of poets (Spanish: \"país de poetas\" ) is commonly used to describe Chile due to its highly valued poetry tradition.",
+      " The phrase is most often associated with the fact that Chilean poets have twice obtained Nobel Prize in Literature for their works, first Gabriela Mistral in 1945 and then Pablo Neruda in 1971.",
+      " According to Austral University of Chile academician Oscar Galindo the concept of Chile as \"land of poets\" is mostly foreign."
+    ],
+    [
+      "The Premio Gabriela Mistral (Premio Interamericano de Cultura \"Gabriela Mistral\" or Gabriela Mistral Inter-American Prize for Culture) was an award made by the Organization of American States.",
+      " It was created in 1979 in memory of the Nobel laureate Gabriela Mistral."
+    ],
+    [
+      "Mistral is a brand of Chilean pisco owned by Compañía de Cervecerías Unidas (CCU).",
+      " The brand takes its name from the Chilean nobel literature laureate Gabriela Mistral who was a native from Elqui Valley where pisco grapes are grown."
+    ],
+    [
+      "Poet-diplomats are poets who have also served their countries as diplomats.",
+      " The best known poet-diplomats are perhaps Geoffrey Chaucer and Thomas Wyatt; the category also includes recipients of the Nobel Prize in Literature: Ivo Andrić, Gabriela Mistral, Saint-John Perse, Miguel Ángel Asturias, Pablo Neruda, George Seferis, Czesław Miłosz and Octavio Paz.",
+      " Contemporary poet-diplomats include Abhay K, Indran Amirthanayagam, Kofi Awoonor, Philip McDonagh and Yiorgos Chouliaras."
+    ],
+    [
+      "Gilbert Keith Chesterton, KC*SG (29 May 1874 – 14 June 1936), better known as G. K. Chesterton, was an English writer, poet, philosopher, dramatist, journalist, orator, lay theologian, biographer, and literary and art critic.",
+      " Chesterton is often referred to as the \"prince of paradox\". \"",
+      "Time\" magazine has observed of his writing style: \"Whenever possible Chesterton made his points with popular sayings, proverbs, allegories—first carefully turning them inside out.\""
+    ],
+    [
+      "Colegio Particular Gabriela Mistral (English: Gabriela Mistral Particular School ) is a Chilean high school in Rancagua, Cachapoal Province, Chile."
+    ],
+    [
+      "Gabriela Mistral University (Spanish: \"Universidad Gabriela Mistral\" ) is a privately funded university in Santiago, Chile."
+    ],
+    [
+      "Gabriela Mistral (] ; 7 April 1889 – 10 January 1957) was the pseudonym of Lucila Godoy y Alcayaga, a Chilean poet-diplomat, educator and humanist.",
+      " In 1945 she became the first Latin American author to receive a Nobel Prize in Literature, \"for her lyric poetry which, inspired by powerful emotions, has made her name a symbol of the idealistic aspirations of the entire Latin American world\".",
+      " Some central themes in her poems are nature, betrayal, love, a mother's love, sorrow and recovery, travel, and Latin American identity as formed from a mixture of Native American and European influences.",
+      " Her portrait also appears on the 5,000 Chilean peso bank note."
+    ],
+    [
+      "Pablo de Rokha (October 17, 1895 in Licantén, Chile - December 10, 1968 in Santiago, Chile) was a Chilean poet.",
+      " He won the Chilean Premio Nacional de Literatura (National Literature Prize) in 1965 and is counted among The four greats of Chilean poetry, along with Pablo Neruda, Vicente Huidobro and Gabriela Mistral.",
+      " He is considered an avant-garde poet and an influential figure in the poetry scene of his country."
+    ]
+  ]
+}

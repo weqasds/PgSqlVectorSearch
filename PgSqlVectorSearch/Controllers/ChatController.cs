@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Application.ApplicationServiceContract;
 using Application.Dto;
 using Application.ApplicationServiceContract.CrossCutting;
+using ApplicationService.Dto.Request;
 
 namespace PgSqlVectorSearch.Controllers;
 
@@ -50,19 +51,66 @@ public class ChatController : ControllerBase
         return CreatedAtAction(nameof(GetConversation), new { id = result.Id }, result);
     }
 
+    /// <summary>
+    /// 获取指定聊天会话的详细信息
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet("conversations/{id}")]
     public async Task<ActionResult<ChatSessionDto>> GetConversation(Guid id)
     {
-        // Note: GetChatSessionById method not defined in interface
-        // For now, return Not Implemented
-        return StatusCode(501, "Get conversation by ID not implemented");
+        // Get current user ID from authentication context
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var session = await _ragChatAppService.GetChatSessionByIdAsync(id);
+
+            // 验证会话是否属于当前用户
+            if (session.UserId != currentUserId.Value)
+            {
+                return Forbid(); // 或者返回NotFound以隐藏存在性
+            }
+
+            return Ok(session);
+        }
+        catch (ArgumentException ex) when (ex.Message.Contains("not found"))
+        {
+            return NotFound();
+        }
     }
 
     [HttpDelete("conversations/{id}")]
     public async Task<ActionResult> DeleteConversation(Guid id)
     {
-        // Note: DeleteChatSession method not defined in interface
-        return StatusCode(501, "Delete conversation not implemented");
+        // Get current user ID from authentication context
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            // 首先获取会话以验证所有权
+            var session = await _ragChatAppService.GetChatSessionByIdAsync(id);
+            if (session.UserId != currentUserId.Value)
+            {
+                return Forbid(); // 或者返回NotFound以隐藏存在性
+            }
+
+            // 删除会话
+            await _ragChatAppService.DeleteChatSessionAsync(id);
+            return NoContent();
+        }
+        catch (ArgumentException ex) when (ex.Message.Contains("not found"))
+        {
+            return NotFound();
+        }
     }
 
     [HttpGet("conversations/{id}/messages")]
@@ -97,9 +145,26 @@ public class ChatController : ControllerBase
     [HttpPost("rag")]
     public async Task<ActionResult<ChatResponseDto>> DirectRag([FromBody] DirectRagRequest request)
     {
-        // Note: Direct RAG method not defined in interface
-        // Could be implemented as a separate service method
-        return StatusCode(501, "Direct RAG not implemented");
+        // 可以添加用户认证，但允许匿名访问可能更有用
+        // 如果需要认证，可以取消注释下面的代码
+        /*
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == null)
+        {
+            return Unauthorized();
+        }
+        */
+
+        try
+        {
+            var result = await _ragChatAppService.DirectRagAsync(request.Query, request.KnowledgeBaseId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            // 根据异常类型返回适当的HTTP状态码
+            return StatusCode(500, $"Direct RAG processing failed: {ex.Message}");
+        }
     }
 
     private Guid? GetCurrentUserId()
