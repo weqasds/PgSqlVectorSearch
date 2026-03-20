@@ -8,7 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using DomainService.ServiceContract.CrossCutting;
 using DomainService.Entities.UserManagement;
 
-namespace InfrastructureShared.Services;
+namespace Infrastructure.InfrastructureShared.Services;
 
 /// <summary>
 /// JWT令牌服务实现

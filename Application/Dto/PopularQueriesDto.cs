@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Application.ApplicationServiceContract;
+namespace Application.Dto;
 
 public class PopularQueriesDto
 {

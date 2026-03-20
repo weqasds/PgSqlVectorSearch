@@ -2,7 +2,7 @@ using System;
 using Application.Extensions;
 using DomainService.Entities.KnowledgeManagement;
 
-namespace Application.ApplicationServiceContract;
+namespace Application.Dto;
 
 public class DocumentDto
 {

@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-
+using Application.Dto;
 namespace Application.ApplicationServiceContract;
 
 public interface IAnalyticsAppService

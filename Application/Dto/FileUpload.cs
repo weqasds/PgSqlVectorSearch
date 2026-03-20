@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace Application.ApplicationServiceContract;
+namespace Application.Dto;
 
 public class FileUpload
 {

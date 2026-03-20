@@ -1,21 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Application.QueryServices;
-using DomainService.Entities.Core;
-using DomainService.Entities.KnowledgeManagement;
-using DomainService.Entities.KnowledgeGraph;
-using DomainService.Entities.Enums;
-using DomainService.Entities.VectorSearch;
-using DomainService.Entities.Chat;
-using DomainService.Entities.UserManagement;
 using DomainService.Entities.System;
-using DomainService.Entities.RAG;
-using DomainService.Entities.Analytics;
 using Microsoft.EntityFrameworkCore;
-
-namespace EFCoreInfrastructure.QueryServices;
+namespace Infrastructure.EFCoreInfrastructure.QueryServices;
 
 public class AuditLogQueryService : QueryServiceBase<AuditLog>
 {

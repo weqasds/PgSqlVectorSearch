@@ -5,7 +5,7 @@ using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
 using DomainService.ServiceContract.CrossCutting;
 
-namespace InfrastructureShared.Services;
+namespace Infrastructure.InfrastructureShared.Services;
 
 public class FileStorageService : IFileStorageService
 {

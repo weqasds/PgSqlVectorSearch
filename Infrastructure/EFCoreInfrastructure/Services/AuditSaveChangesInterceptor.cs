@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Text.Json;
-using EFCoreInfrastructure.QueryServices;
-using Application.QueryServices;
-using ApplicationServiceContract.CrossCutting;
+namespace Infrastructure.EFCoreInfrastructure.Services;
 public class AuditSaveChangesInterceptor : SaveChangesInterceptor
 {
     private readonly ICurrentUserService _currentUserService;

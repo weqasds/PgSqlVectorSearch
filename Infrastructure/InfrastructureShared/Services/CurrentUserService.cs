@@ -4,7 +4,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Application.ApplicationServiceContract.CrossCutting;
 
-namespace InfrastructureShared.Services;
+namespace Infrastructure.InfrastructureShared.Services;
 
 /// <summary>
 /// 当前用户服务实现

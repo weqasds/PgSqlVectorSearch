@@ -1,4 +1,4 @@
-namespace Application.ApplicationServiceContract;
+namespace Application.Dto;
 
 public class RetrievedChunkDto
 {

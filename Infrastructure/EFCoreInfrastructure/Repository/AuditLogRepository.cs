@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using DomainService.Entities.System;
 using DomainService.ServiceContract.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace EFCoreInfrastructure.Repository;
+namespace Infrastructure.EFCoreInfrastructure.Repository;
 public class AuditLogRepository : RepositoryBase<AuditLog>, IAuditLogRepository
 {
     public AuditLogRepository(RagDbContext context) : base(context)

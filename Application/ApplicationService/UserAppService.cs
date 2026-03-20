@@ -1,14 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
 using Application.ApplicationServiceContract;
 using Application.Dto;
 using DomainService.Entities.UserManagement;
 using DomainService.Entities.Chat;
-using ApplicationServiceContract.CrossCutting;
+using Application.ApplicationServiceContract.CrossCutting;
 
 namespace Application.ApplicationService;
 

@@ -1,12 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Pgvector.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
-namespace EFCoreInfrastructure;
-
-using DomainService.Entities.Core;
+﻿using DomainService.Entities.Core;
 using DomainService.Entities.KnowledgeManagement;
 using DomainService.Entities.KnowledgeGraph;
 using DomainService.Entities.Enums;
@@ -16,7 +8,10 @@ using DomainService.Entities.UserManagement;
 using DomainService.Entities.System;
 using DomainService.Entities.RAG;
 using DomainService.Entities.Analytics;
-using ApplicationServiceContract.CrossCutting;
+using Application.ApplicationServiceContract.CrossCutting;
+using Microsoft.EntityFrameworkCore;
+namespace Infrastructure.EFCoreInfrastructure;
+
 
 public class RagDbContext : DbContext, IUnitOfWork
 {

@@ -1,8 +1,5 @@
 using ApplicationService.Dto.Request;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
+using Application.Dto;
 namespace Application.ApplicationServiceContract;
 
 public interface IRagChatAppService

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using DomainService.Entities.Enums;
 using DomainService.Entities.VectorSearch;
 using DomainService.ServiceContract.CrossCutting;
@@ -9,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Pgvector;
 using Pgvector.EntityFrameworkCore;
 
-namespace EFCoreInfrastructure.Repository;
+namespace Infrastructure.EFCoreInfrastructure.Repository;
 
 /// <summary>
 /// 向量存储服务实现，使用EF Core和pgvector进行向量存储和相似性搜索

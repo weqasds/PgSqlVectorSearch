@@ -1,17 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Threading.Tasks;
-using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
-using DomainService.ServiceContract.CrossCutting;
+using Application.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract;
 using Application.ApplicationServiceContract.DocumentationService;
 using Application.Extensions;
-using ApplicationServiceContract.CrossCutting;
-
+using Application.ApplicationServiceContract.CrossCutting;
+using Application.Dto;
 namespace Application.ApplicationService;
 
 public class BatchOperationAppService : IBatchOperationAppService

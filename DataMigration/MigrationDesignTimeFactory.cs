@@ -1,10 +1,9 @@
-﻿using DomainService.Entities.Core;using DomainService.Entities.KnowledgeManagement;using DomainService.Entities.KnowledgeGraph;using DomainService.Entities.Enums;using DomainService.Entities.VectorSearch;using DomainService.Entities.Chat;using DomainService.Entities.UserManagement;using DomainService.Entities.System;using DomainService.Entities.RAG;using DomainService.Entities.Analytics;
-using EFCoreInfrastructure;
+﻿using DomainService.Entities.KnowledgeManagement;
+using DomainService.Entities.Enums;
+using DomainService.Entities.Chat;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Infrastructure.EFCoreInfrastructure;
 
 namespace DataMigration;
 

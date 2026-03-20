@@ -20,6 +20,7 @@
   <ItemGroup>
     <Folder Include="Extension\" />
     <Folder Include="Services\" />
+    <Folder Include="DocumentParser\" />
   </ItemGroup>
 
 </Project>

@@ -1,20 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DomainService.Entities.Core;
 using DomainService.Entities.KnowledgeManagement;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
-
 using Application.ApplicationServiceContract.DocumentationService;
 using Application.QueryServices;
-using Application.ApplicationServiceContract;
-using DomainService.ServiceContract.CrossCutting;
-using Application.Extensions;
+using Application.ServiceContract.CrossCutting;
 using Application.ApplicationServiceContract.CrossCutting;
 using Application.ApplicationServiceContract.AI;
-
+using DomainService.ServiceContract.CrossCutting;
+using Application.Dto;
 namespace Application.ApplicationService;
 
 public class DocumentManagementAppService : IDocumentManagementAppService
@@ -182,15 +175,16 @@ public class DocumentManagementAppService : IDocumentManagementAppService
         // 2. 解析文档内容（支持PDF、Word、TXT等格式）
         if (fileStream == null)
             throw new FileNotFoundException($"未找到文档文件，路径: {document.FilePath}");
-        // 3. 分块处理文本
         string content = _documentService.ToString()?? "";
+        // 3. 分块处理文本
         if (string.IsNullOrWhiteSpace(content))
             throw new InvalidOperationException("");
-        //var chunks=
+        var chunks=new List<string>();
         // 4. 为每个分块生成向量
+        var vectors=await _semanticKernelService.GenerateEmbeddingsAsync(chunks);
         // 5. 保存分块和向量到数据库
-
-        // 临时实现：创建示例分块
+        var chunkEntites = new List<KnowledgeChunk>();
+        foreach(var item in chunks){}
         var sampleChunk = document.CreateChunk($"这是文档 '{document.FileName}' 的示例分块内容。", 0);
         // 更新文档状态为已处理
         document.MarkAsProcessed(1); // 假设处理了1个块

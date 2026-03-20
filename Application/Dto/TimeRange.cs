@@ -1,6 +1,6 @@
 using System;
 
-namespace Application.ApplicationServiceContract;
+namespace Application.Dto;
 
 public class TimeRange
 {

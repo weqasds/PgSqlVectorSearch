@@ -1,14 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Application.QueryServices;
 using DomainService.Entities.VectorSearch;
 using Microsoft.EntityFrameworkCore;
 using Pgvector;
 using Pgvector.EntityFrameworkCore;
 
-namespace EFCoreInfrastructure.QueryServices;
+namespace Infrastructure.EFCoreInfrastructure.QueryServices;
 
 /// <summary>
 /// 向量搜索查询服务实现

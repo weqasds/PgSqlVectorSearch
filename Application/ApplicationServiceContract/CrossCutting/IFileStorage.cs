@@ -1,7 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace DomainService.ServiceContract.CrossCutting;
+namespace Application.ServiceContract.CrossCutting;
 
 public interface IFileStorageService
 {

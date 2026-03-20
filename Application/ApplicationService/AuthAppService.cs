@@ -9,7 +9,6 @@ using Application.Dto;
 using DomainService.Entities.UserManagement;
 using System.Security.Cryptography;
 using System.Text;
-using ApplicationServiceContract.CrossCutting;
 using ApplicationService.Dto.Request;
 
 namespace Application.ApplicationService;

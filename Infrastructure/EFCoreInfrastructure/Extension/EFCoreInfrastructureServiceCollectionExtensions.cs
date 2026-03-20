@@ -1,14 +1,14 @@
 using Application.QueryServices;
-using ApplicationServiceContract.CrossCutting;
+using Application.ApplicationServiceContract.CrossCutting;
 using DomainService.Entities.System;
 using DomainService.Entities.VectorSearch;
 using DomainService.ServiceContract.CrossCutting;
 using DomainService.ServiceContract.Repositories;
-using EFCoreInfrastructure.QueryServices;
-using EFCoreInfrastructure.Repository;
+using Infrastructure.EFCoreInfrastructure.QueryServices;
+using Infrastructure.EFCoreInfrastructure.Repository;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EFCoreInfrastructure.Extensions;
+namespace Infrastructure.EFCoreInfrastructure.Extensions;
 
 /// <summary>
 /// EFCore基础设施层服务注册扩展方法
@@ -36,7 +36,7 @@ public static class EFCoreInfrastructureServiceCollectionExtensions
         // 2. 注册查询服务实现
         //uof单元注册
         //保证无论是使用IUnitOfWork还是使用上下文都是同一个实例
-        services.AddScoped<IUnitOfWork>(sp=>sp.GetRequiredService<RagDbContext>());
+        services.AddScoped<IUnitOfWork>(sp=> sp.GetRequiredService<RagDbContext>());
         //通用查询服务注册
         services.AddScoped<IQueryService<Embedding>, VectorSearchQueryService>();
         services.AddScoped<IQueryService<AuditLog>, AuditLogQueryService>();

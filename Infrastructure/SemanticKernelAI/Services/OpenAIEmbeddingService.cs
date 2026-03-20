@@ -1,14 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Pgvector;
 using DomainService.ServiceContract.CrossCutting;
-using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.SemanticKernelAI.Services;
 

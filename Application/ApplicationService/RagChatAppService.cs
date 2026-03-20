@@ -1,15 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using DomainService.Entities.RAG;
 using DomainService.ServiceContract.Services;
 using DomainService.ServiceContract.Repositories;
 using Application.ApplicationServiceContract;
 using DomainService.Entities.Chat;
-using ApplicationServiceContract.CrossCutting;
+using Application.ApplicationServiceContract.CrossCutting;
 using ApplicationService.Dto.Request;
-
+using Application.Dto;
 namespace Application.ApplicationService;
 
 public class RagChatAppService : IRagChatAppService

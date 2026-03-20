@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Application.ApplicationServiceContract.CrossCutting;
 using Microsoft.Extensions.Logging;
 
-namespace InfrastructureShared.Services;
+namespace Infrastructure.InfrastructureShared.Services;
 
 /// <summary>
 /// 系统指标收集器实现

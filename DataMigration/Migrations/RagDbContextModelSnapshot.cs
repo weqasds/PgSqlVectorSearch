@@ -4,7 +4,7 @@ using System.Text.Json;
 using DomainService.Entities.Chat;
 using DomainService.Entities.Enums;
 using DomainService.Entities.KnowledgeManagement;
-using EFCoreInfrastructure;
+using Infrastructure.EFCoreInfrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
