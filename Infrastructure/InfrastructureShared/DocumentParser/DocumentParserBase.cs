@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Application.ApplicationServiceContract.DocumentParsing;
 using Application.Models.DocumentParsing;
 using DomainService.Exceptions;
+using Npgsql.Replication;
 
 namespace Infrastructure.InfrastructureShared.DocumentParser;
 
@@ -37,7 +38,7 @@ public abstract class DocumentParserBase : IDocumentParser
     }
 
     /// <inheritdoc />
-    public async Task<ParsedDocument> ParseAsync(
+    public virtual async Task<ParsedDocument> ParseAsync(
         Stream stream,
         string fileName,
         DocumentParseOptions? documentParseOptions = null,

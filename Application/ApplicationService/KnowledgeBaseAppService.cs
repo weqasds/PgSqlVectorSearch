@@ -5,6 +5,7 @@ using Application.ApplicationServiceContract;
 using Application.ApplicationServiceContract.DocumentationService;
 using Application.ApplicationServiceContract.CrossCutting;
 using Application.Dto;
+using Application.Models.DocumentParsing;
 namespace Application.ApplicationService;
 
 public class KnowledgeBaseAppService : IKnowledgeBaseAppService
@@ -66,7 +67,7 @@ public class KnowledgeBaseAppService : IKnowledgeBaseAppService
         };
     }
 
-    public async Task UploadDocumentAsync(Guid knowledgeBaseId, FileUpload fileUpload)
+    public async Task UploadDocumentAsync(Guid knowledgeBaseId, FileUpload fileUpload, DocumentParseOptions? documentParseOptions = default)
     {
         // Validate knowledge base exists
         await _knowledgeBaseService.GetKnowledgeBaseAsync(knowledgeBaseId);

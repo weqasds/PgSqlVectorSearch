@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.ApplicationServiceContract.DocumentParsing;
 using Application.Models.DocumentParsing;
+using Application.Models.DocumentParsing.Node;
+using DomainService.Exceptions;
 
 namespace Infrastructure.InfrastructureShared.DocumentParser;
 
@@ -12,7 +15,7 @@ namespace Infrastructure.InfrastructureShared.DocumentParser;
 /// Excel 文档解析器（占位符实现）。
 /// 需要安装 OpenXML SDK 或 EPPlus 等 Excel 解析库才能实际使用。
 /// </summary>
-public class ExcelDocumentParser : ChunkableDocumentParserBase
+public class ExcelDocumentParser : DocumentParserBase, IChunkableDocumentParser, IStructuredDocumentParser
 {
     /// <inheritdoc />
     protected internal override IReadOnlySet<string> SupportedExtensions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -22,62 +25,127 @@ public class ExcelDocumentParser : ChunkableDocumentParserBase
         ".csv",
         ".tsv"
     };
-
     /// <inheritdoc />
-    protected override Task<IReadOnlyList<ParsedBlock>> ParseBlocksCoreAsync(
+    protected override async Task<ParsedDocument> ParseCoreAsync(
         Stream stream,
         string fileName,
         DocumentParseOptions? options,
         CancellationToken cancellationToken)
     {
-        throw new NotSupportedException(
-            "Excel 解析需要安装 OpenXML SDK 或 EPPlus 等库。请安装相应的 NuGet 包，并实现实际的解析逻辑。");
+        // 默认使用结构化解析
+        var structured = await ParseStructuredCoreAsync(stream, fileName, options, cancellationToken);
+        return structured.ConvertToParsedDocument();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ParsedBlock>> ParseBlocksAsync(
+        Stream stream,
+        string fileName,
+        DocumentParseOptions? documentParseOptions = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateArguments(stream, fileName);
+
+        if (!CanHandle(fileName))
+        {
+            throw new DocumentFormatNotSupportedException(
+                $"文件 '{fileName}' 的格式不被支持。本解析器支持: {string.Join(", ", SupportedExtensions)}")
+            {
+                FileName = fileName,
+                SupportedFormats = string.Join(", ", SupportedExtensions)
+            };
+        }
+
+        try
+        {
+            return await ParseBlocksCoreAsync(stream, fileName, documentParseOptions, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (DocumentFormatNotSupportedException)
+        {
+            throw;
+        }
+        catch (DocumentParsingFailedException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new DocumentParsingFailedException(
+                $"解析文件 '{fileName}' 为块时发生错误。", ex)
+            {
+                FileName = fileName,
+                ParserType = GetType().Name
+            };
+        }
+    }
+
+    /// <inheritdoc />
+    protected virtual async Task<IReadOnlyList<ParsedBlock>> ParseBlocksCoreAsync(
+        Stream stream,
+        string fileName,
+        DocumentParseOptions? options,
+        CancellationToken cancellationToken)
+    {
+        return await Helpers.ExcelParserHelper.ParseToBlocksAsync(stream, fileName, options, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<StructuredDocument> ParseStructuredAsync(
+        Stream stream,
+        string fileName,
+        DocumentParseOptions? documentParseOptions = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateArguments(stream, fileName);
+
+        if (!CanHandle(fileName))
+        {
+            throw new DocumentFormatNotSupportedException(
+                $"文件 '{fileName}' 的格式不被支持。本解析器支持: {string.Join(", ", SupportedExtensions)}")
+            {
+                FileName = fileName,
+                SupportedFormats = string.Join(", ", SupportedExtensions)
+            };
+        }
+
+        try
+        {
+            return await ParseStructuredCoreAsync(stream, fileName, documentParseOptions, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (DocumentFormatNotSupportedException)
+        {
+            throw;
+        }
+        catch (DocumentParsingFailedException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new DocumentParsingFailedException(
+                $"结构化解析文件 '{fileName}' 时发生错误。", ex)
+            {
+                FileName = fileName,
+                ParserType = GetType().Name
+            };
+        }
     }
 
     /// <summary>
-    /// 示例实现（需要取消注释并安装相应的 NuGet 包）：
+    /// 结构化解析文档的实现。
     /// </summary>
-    /*
-    protected override async Task<IReadOnlyList<ParsedBlock>> ParseBlocksCoreAsync(
+    protected virtual async Task<StructuredDocument> ParseStructuredCoreAsync(
         Stream stream,
         string fileName,
         DocumentParseOptions? options,
         CancellationToken cancellationToken)
     {
-        var blocks = new List<ParsedBlock>();
-
-        // 使用 EPPlus 示例（需要安装 EPPlus 包）：
-        // using OfficeOpenXml;
-        //
-        // using var package = new ExcelPackage(stream);
-        // var workbook = package.Workbook;
-        // foreach (var worksheet in workbook.Worksheets)
-        // {
-        //     // 将工作表名称作为标题
-        //     blocks.Add(CreateTitleBlock($"工作表: {worksheet.Name}"));
-        //
-        //     // 遍历所有有数据的单元格
-        //     var dimension = worksheet.Dimension;
-        //     if (dimension != null)
-        //     {
-        //         for (int row = dimension.Start.Row; row <= dimension.End.Row; row++)
-        //         {
-        //             var rowValues = new List<string>();
-        //             for (int col = dimension.Start.Column; col <= dimension.End.Column; col++)
-        //             {
-        //                 var cell = worksheet.Cells[row, col];
-        //                 rowValues.Add(cell.Text);
-        //             }
-        //             var rowText = string.Join("\t", rowValues);
-        //             if (!string.IsNullOrWhiteSpace(rowText))
-        //             {
-        //                 blocks.Add(CreateTextBlock(rowText, BlockType.Table));
-        //             }
-        //         }
-        //     }
-        // }
-
-        return blocks;
+        return await Helpers.ExcelParserHelper.ParseToStructuredAsync(stream, fileName, options, cancellationToken)
+            .ConfigureAwait(false);
     }
-    */
+
+    
 }

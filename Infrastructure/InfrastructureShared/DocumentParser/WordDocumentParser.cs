@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.ApplicationServiceContract.DocumentParsing;
 using Application.Models.DocumentParsing;
+using Application.Models.DocumentParsing.Node;
+using DomainService.Exceptions;
 
 namespace Infrastructure.InfrastructureShared.DocumentParser;
 
@@ -12,60 +15,135 @@ namespace Infrastructure.InfrastructureShared.DocumentParser;
 /// Word 文档解析器（占位符实现）。
 /// 需要安装 OpenXML SDK 或其他 Word 解析库才能实际使用。
 /// </summary>
-public class WordDocumentParser : ChunkableDocumentParserBase
+public class WordDocumentParser : DocumentParserBase, IChunkableDocumentParser, IStructuredDocumentParser
 {
     /// <inheritdoc />
-    public override IReadOnlySet<string> SupportedExtensions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    protected internal override IReadOnlySet<string> SupportedExtensions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         ".docx",
         ".doc"
     };
-
     /// <inheritdoc />
-    protected override Task<IReadOnlyList<ParsedBlock>> ParseBlocksCoreAsync(
+    protected override async Task<ParsedDocument> ParseCoreAsync(
         Stream stream,
         string fileName,
         DocumentParseOptions? options,
         CancellationToken cancellationToken)
     {
-        throw new NotSupportedException(
-            "Word 解析需要安装 OpenXML SDK 或其他 Word 解析库。请安装 DocumentFormat.OpenXml 等 NuGet 包，并实现实际的解析逻辑。");
+        // 默认使用结构化解析
+        var structured = await ParseStructuredCoreAsync(stream, fileName, options, cancellationToken);
+        return structured.ConvertToParsedDocument();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ParsedBlock>> ParseBlocksAsync(
+        Stream stream,
+        string fileName,
+        DocumentParseOptions? documentParseOptions = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateArguments(stream, fileName);
+
+        if (!CanHandle(fileName))
+        {
+            throw new DocumentFormatNotSupportedException(
+                $"文件 '{fileName}' 的格式不被支持。本解析器支持: {string.Join(", ", SupportedExtensions)}")
+            {
+                FileName = fileName,
+                SupportedFormats = string.Join(", ", SupportedExtensions)
+            };
+        }
+
+        try
+        {
+            return await ParseBlocksCoreAsync(stream, fileName, documentParseOptions, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (DocumentFormatNotSupportedException)
+        {
+            throw;
+        }
+        catch (DocumentParsingFailedException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new DocumentParsingFailedException(
+                $"解析文件 '{fileName}' 为块时发生错误。", ex)
+            {
+                FileName = fileName,
+                ParserType = GetType().Name
+            };
+        }
+    }
+
+    /// <inheritdoc />
+    protected virtual async Task<IReadOnlyList<ParsedBlock>> ParseBlocksCoreAsync(
+        Stream stream,
+        string fileName,
+        DocumentParseOptions? options,
+        CancellationToken cancellationToken)
+    {
+        return await Helpers.WordParserHelper.ParseToBlocksAsync(stream, fileName, options, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<StructuredDocument> ParseStructuredAsync(
+        Stream stream,
+        string fileName,
+        DocumentParseOptions? documentParseOptions = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateArguments(stream, fileName);
+
+        if (!CanHandle(fileName))
+        {
+            throw new DocumentFormatNotSupportedException(
+                $"文件 '{fileName}' 的格式不被支持。本解析器支持: {string.Join(", ", SupportedExtensions)}")
+            {
+                FileName = fileName,
+                SupportedFormats = string.Join(", ", SupportedExtensions)
+            };
+        }
+
+        try
+        {
+            return await ParseStructuredCoreAsync(stream, fileName, documentParseOptions, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (DocumentFormatNotSupportedException)
+        {
+            throw;
+        }
+        catch (DocumentParsingFailedException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new DocumentParsingFailedException(
+                $"结构化解析文件 '{fileName}' 时发生错误。", ex)
+            {
+                FileName = fileName,
+                ParserType = GetType().Name
+            };
+        }
     }
 
     /// <summary>
-    /// 示例实现（需要取消注释并安装相应的 NuGet 包）：
+    /// 结构化解析文档的实现。
     /// </summary>
-    /*
-    protected override async Task<IReadOnlyList<ParsedBlock>> ParseBlocksCoreAsync(
+    protected virtual async Task<StructuredDocument> ParseStructuredCoreAsync(
         Stream stream,
         string fileName,
         DocumentParseOptions? options,
         CancellationToken cancellationToken)
     {
-        var blocks = new List<ParsedBlock>();
-
-        // 使用 OpenXML SDK 示例（需要安装 DocumentFormat.OpenXml 包）：
-        // using DocumentFormat.OpenXml.Packaging;
-        // using DocumentFormat.OpenXml.Wordprocessing;
-        //
-        // using var wordDoc = WordprocessingDocument.Open(stream, false);
-        // var body = wordDoc.MainDocumentPart?.Document.Body;
-        // if (body != null)
-        // {
-        //     foreach (var paragraph in body.Elements<Paragraph>())
-        //     {
-        //         var text = paragraph.InnerText;
-        //         if (!string.IsNullOrWhiteSpace(text))
-        //         {
-        //             // 简单判断是否为标题（根据样式）
-        //             var isTitle = paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value?.Contains("Heading") == true;
-        //             var blockType = isTitle ? BlockType.Title : BlockType.Paragraph;
-        //             blocks.Add(CreateTextBlock(text.Trim(), blockType));
-        //         }
-        //     }
-        // }
-
-        return blocks;
+        return await Helpers.WordParserHelper.ParseToStructuredAsync(stream, fileName, options, cancellationToken)
+            .ConfigureAwait(false);
     }
-    */
+
+    
 }

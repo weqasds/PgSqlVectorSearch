@@ -23,8 +23,8 @@ public class SemanticKernelService : ISemanticKernelService
         Kernel kernel,
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
         IChatCompletionService chatCompletionService,
-        string embeddingModelName = "text-embedding-3-small",
-        int embeddingDimension = 1536)
+        string embeddingModelName = "Qwen3-Embedding-0.6B",
+        int embeddingDimension = 1024)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatCompletionService = chatCompletionService;

@@ -572,6 +572,41 @@ namespace DataMigration.Migrations
                     b.ToTable("user", (string)null);
                 });
 
+            modelBuilder.Entity("DomainService.Entities.VectorSearch.Embedding", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChunkId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Vector>("Vector")
+                        .IsRequired()
+                        .HasColumnType("vector(1024)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChunkId")
+                        .IsUnique();
+
+                    b.HasIndex("Vector");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Vector"), "hnsw");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Vector"), new[] { "vector_cosine_ops" });
+
+                    b.ToTable("embedding", (string)null);
+                });
+
             modelBuilder.Entity("DomainService.Entities.Chat.ChatMessage", b =>
                 {
                     b.HasOne("DomainService.Entities.Chat.ChatSession", "ChatSession")
@@ -671,34 +706,7 @@ namespace DataMigration.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("DomainService.Entities.VectorSearch.Embedding", "Embedding", b1 =>
-                        {
-                            b1.Property<Guid>("ChunkId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<Vector>("Vector")
-                                .IsRequired()
-                                .HasColumnType("vector(1536)");
-
-                            b1.HasKey("ChunkId");
-
-                            b1.HasIndex("Vector");
-
-                            NpgsqlIndexBuilderExtensions.HasMethod(b1.HasIndex("Vector"), "hnsw");
-                            NpgsqlIndexBuilderExtensions.HasOperators(b1.HasIndex("Vector"), new[] { "vector_cosine_ops" });
-
-                            b1.ToTable("embedding", (string)null);
-
-                            b1.WithOwner("Chunk")
-                                .HasForeignKey("ChunkId");
-
-                            b1.Navigation("Chunk");
-                        });
-
                     b.Navigation("Document");
-
-                    b.Navigation("Embedding")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("DomainService.Entities.KnowledgeManagement.KnowledgeDocument", b =>
@@ -761,6 +769,17 @@ namespace DataMigration.Migrations
                     b.Navigation("RagGeneration");
                 });
 
+            modelBuilder.Entity("DomainService.Entities.VectorSearch.Embedding", b =>
+                {
+                    b.HasOne("DomainService.Entities.KnowledgeManagement.KnowledgeChunk", "Chunk")
+                        .WithOne("Embedding")
+                        .HasForeignKey("DomainService.Entities.VectorSearch.Embedding", "ChunkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chunk");
+                });
+
             modelBuilder.Entity("DomainService.Entities.Chat.ChatSession", b =>
                 {
                     b.Navigation("Messages");
@@ -777,6 +796,9 @@ namespace DataMigration.Migrations
 
             modelBuilder.Entity("DomainService.Entities.KnowledgeManagement.KnowledgeChunk", b =>
                 {
+                    b.Navigation("Embedding")
+                        .IsRequired();
+
                     b.Navigation("SourceRelations");
 
                     b.Navigation("TargetRelations");

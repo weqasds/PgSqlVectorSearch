@@ -1,4 +1,5 @@
 using Application.Dto;
+using Application.Models.DocumentParsing;
 namespace Application.ApplicationServiceContract.DocumentationService;
 
 public interface IDocumentManagementAppService
@@ -9,7 +10,7 @@ public interface IDocumentManagementAppService
     /// <param name="knowledgeBaseId"></param>
     /// <param name="file"></param>
     /// <returns></returns>
-    Task<DocumentDto> UploadDocumentAsync(Guid knowledgeBaseId, FileUpload file);
+    Task<DocumentDto> UploadDocumentAsync(Guid knowledgeBaseId, FileUpload file, DocumentParseOptions? documentParseOptions = default);
     /// <summary>
     /// 查询文档
     /// </summary>
@@ -33,7 +34,7 @@ public interface IDocumentManagementAppService
     /// </summary>
     /// <param name="documentId"></param>
     /// <returns></returns>
-    Task ProcessDocumentAsync(Guid documentId);
+    Task ProcessDocumentAsync(Guid documentId, DocumentParseOptions? documentParseOptions = default);
     /// <summary>
     /// 根据文档ID获取文档详情，包括关联的知识块信息
     /// </summary>

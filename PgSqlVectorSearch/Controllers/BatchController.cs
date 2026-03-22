@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Application.ApplicationServiceContract;
 using PgSqlVectorSearch.Model;
 using Application.Extensions;
+using Application.Dto;
 namespace PgSqlVectorSearch.Controllers;
 
 [ApiController]

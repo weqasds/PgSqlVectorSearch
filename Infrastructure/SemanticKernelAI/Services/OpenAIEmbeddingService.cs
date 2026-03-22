@@ -18,8 +18,8 @@ public class OpenAIEmbeddingService : IEmbeddingService
 
     public OpenAIEmbeddingService(Kernel kernel,
         IEmbeddingGenerator<string,Embedding<float>> embeddingGenerator,
-        string embeddingModelName = "text-embedding-3-small", 
-        int embeddingDimension = 1536)
+        string embeddingModelName = "Qwen3-Embedding-0.6B", 
+        int embeddingDimension = 1024)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _embeddingGenerator = embeddingGenerator;

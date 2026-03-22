@@ -8,6 +8,11 @@ using Application.ApplicationServiceContract.CrossCutting;
 using Application.ApplicationServiceContract.AI;
 using DomainService.ServiceContract.CrossCutting;
 using Application.Dto;
+using Application.ApplicationServiceContract.DocumentParsing;
+using Application.Models.DocumentParsing;
+using Application.ApplicationService.DocumentParsing;
+using DomainService.Entities.VectorSearch;
+using Pgvector;
 namespace Application.ApplicationService;
 
 public class DocumentManagementAppService : IDocumentManagementAppService
@@ -15,12 +20,16 @@ public class DocumentManagementAppService : IDocumentManagementAppService
     private readonly IKnowledgeBaseRepository _knowledgeBaseRepository;
     private readonly ISemanticKernelService _semanticKernelService;
     private readonly IDocumentService _documentService;
+    private readonly IDocumentParserSelector _documentParserSelector;
+    private readonly IDocumentParseStrategyResolver _documentParseStrategyResolver;
     private readonly IKnowledgeDocumentRepository _knowledgeDocumentRepository;
     private readonly IKnowledgeChunkQueryService _knowledgeChunkService;
     private readonly IFileStorageService _fileStorageService;
     private readonly IUnitOfWork _unitOfWork;
     //后台任务服务
     private readonly ITaskQueueService _taskQueueService;
+    private readonly IVectorStore _vectorStore;
+    private readonly DocumentParseExecutor _documentParseExecutor;
     public DocumentManagementAppService(
         IKnowledgeBaseRepository knowledgeBaseRepository,
         ISemanticKernelService semanticKernelService,
@@ -29,7 +38,12 @@ public class DocumentManagementAppService : IDocumentManagementAppService
         IKnowledgeDocumentRepository knowledgeDocumentRepository,
         IFileStorageService fileStorageService,
         IUnitOfWork unitOfWork,
-        ITaskQueueService taskQueueService)
+        ITaskQueueService taskQueueService,
+        IDocumentParserSelector documentParserSelector,
+        IDocumentParseStrategyResolver documentParseStrategyResolver,
+        IVectorStore vectorStore,
+        DocumentParseExecutor documentParseExecutor
+        )
     {
         _knowledgeBaseRepository = knowledgeBaseRepository;
         _knowledgeChunkService = knowledgeChunkService;
@@ -38,7 +52,11 @@ public class DocumentManagementAppService : IDocumentManagementAppService
         _unitOfWork = unitOfWork;
         _fileStorageService = fileStorageService;
         _taskQueueService = taskQueueService;
-        _semanticKernelService= semanticKernelService;
+        _semanticKernelService = semanticKernelService;
+        _documentParserSelector = documentParserSelector;
+        _documentParseStrategyResolver = documentParseStrategyResolver;
+        _vectorStore = vectorStore;
+        _documentParseExecutor = documentParseExecutor;
     }
     /// <summary>
     /// 上传文档
@@ -47,7 +65,7 @@ public class DocumentManagementAppService : IDocumentManagementAppService
     /// <param name="file"></param>
     /// <returns></returns>
     /// <exception cref="KeyNotFoundException"></exception>
-    public async Task<DocumentDto> UploadDocumentAsync(Guid knowledgeBaseId, FileUpload file)
+    public async Task<DocumentDto> UploadDocumentAsync(Guid knowledgeBaseId, FileUpload file, DocumentParseOptions? documentParseOptions = default)
     {
         // Upload document via document processing service
         // 验证知识库是否存在
@@ -58,7 +76,7 @@ public class DocumentManagementAppService : IDocumentManagementAppService
         var fileId = await _fileStorageService.UploadFileAsync(file.Content, file.FileName);
 
         // 创建文档记录
-        var document =  KnowledgeDocument.Create(
+        var document = KnowledgeDocument.Create(
             knowledgeBaseId: knowledgeBaseId,
             fileName: file.FileName,
             filePath: fileId, // 存储服务返回的文件ID或路径
@@ -161,41 +179,84 @@ public class DocumentManagementAppService : IDocumentManagementAppService
         });
     }
 
-    
 
-    public async Task ProcessDocumentAsync(Guid documentId)
+
+    public async Task ProcessDocumentAsync(Guid documentId, DocumentParseOptions? documentParseOptions = default)
     {
         var document = await _knowledgeDocumentRepository.GetByIdAsync(documentId);
         if (document == null || document.IsDeleted)
             throw new KeyNotFoundException($"未找到ID为 {documentId} 的文档");
 
-        // TODO: 实现文档处理逻辑，包括：
         // 1. 从文件存储下载文件
         var fileStream = await _fileStorageService.DownloadFileAsync(document.FilePath);
-        // 2. 解析文档内容（支持PDF、Word、TXT等格式）
         if (fileStream == null)
             throw new FileNotFoundException($"未找到文档文件，路径: {document.FilePath}");
-        string content = _documentService.ToString()?? "";
-        // 3. 分块处理文本
-        if (string.IsNullOrWhiteSpace(content))
-            throw new InvalidOperationException("");
-        var chunks=new List<string>();
-        // 4. 为每个分块生成向量
-        var vectors=await _semanticKernelService.GenerateEmbeddingsAsync(chunks);
-        // 5. 保存分块和向量到数据库
-        var chunkEntites = new List<KnowledgeChunk>();
-        foreach(var item in chunks){}
-        var sampleChunk = document.CreateChunk($"这是文档 '{document.FileName}' 的示例分块内容。", 0);
-        // 更新文档状态为已处理
-        document.MarkAsProcessed(1); // 假设处理了1个块
-        
-        // 保存文档变更（包括新知识块）
-        //await _knowledgeDocumentRepository.UpdateAsync(document);
-        await _knowledgeDocumentRepository.AddChunksAsync(new List<KnowledgeChunk>() { sampleChunk });
+
+        // 2. 将FileType枚举转换为字符串
+        var contentTypeString = document.ContentType.ToString();
+
+        // 3. 使用解析策略决定解析模式
+        var parseMode = _documentParseStrategyResolver.Resolve(document.FileName, document.FileSize, contentTypeString);
+
+        // 4. 选择解析器并使用解析执行器解析文档
+        var parser = _documentParserSelector.GetParser(document.FileName) ?? throw new NullReferenceException("找不到合适的文档解析器");
+
+        // 使用解析执行器根据解析模式解析文档
+        var parsedDocument = await _documentParseExecutor.ParseDocumentAsync(
+            parser, parseMode, fileStream, document.FileName, documentParseOptions);
+
+        // 5. 为每个分块生成向量
+        var chunks = parsedDocument.Blocks.Select(b => b.Text).ToList();
+        var vectors = await _semanticKernelService.GenerateEmbeddingsAsync(chunks);
+        var vectorList = vectors.ToList();
+
+        if (chunks.Count != vectorList.Count)
+        {
+            throw new InvalidOperationException($"向量生成数量不匹配: 分块数={chunks.Count}, 向量数={vectorList.Count}");
+        }
+
+        // 6. 创建知识块实体
+        var chunkEntities = new List<KnowledgeChunk>();
+        for (int i = 0; i < chunks.Count; i++)
+        {
+            var chunk = document.CreateChunk(chunks[i], i);
+            chunkEntities.Add(chunk);
+        }
+
+        // 7. 保存知识块到数据库
+        await _knowledgeDocumentRepository.AddChunksAsync(chunkEntities);
         await _unitOfWork.SaveChangesAsync();
 
-        // 异步触发向量生成任务
-        await _taskQueueService.EnqueueVectorGenerationAsync(sampleChunk.Id);
+        // 8. 创建并保存向量数据
+        var embeddings = new List<Embedding>();
+        for (int i = 0; i < chunkEntities.Count; i++)
+        {
+            var chunk = chunkEntities[i];
+            var vector = vectorList[i];
+
+            var embedding = new Embedding
+            {
+                ChunkId = chunk.Id,
+                Chunk = chunk,
+                Vector = vector
+            };
+            embeddings.Add(embedding);
+        }
+
+        if (embeddings.Count > 0)
+        {
+            await _vectorStore.AddRangeAsync(embeddings);
+        }
+
+        // 9. 更新文档状态为已处理
+        document.MarkAsProcessed(chunkEntities.Count);
+        await _unitOfWork.SaveChangesAsync();
+
+        // 10. 异步触发向量生成任务（用于监控或重试）
+        foreach (var chunk in chunkEntities)
+        {
+            await _taskQueueService.EnqueueVectorGenerationAsync(chunk.Id);
+        }
     }
 
 }

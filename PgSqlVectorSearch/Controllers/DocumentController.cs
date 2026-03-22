@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Application.ApplicationServiceContract;
 using Application.ApplicationServiceContract.DocumentationService;
+using Application.Dto;
 
 
 namespace PgSqlVectorSearch.Controllers;

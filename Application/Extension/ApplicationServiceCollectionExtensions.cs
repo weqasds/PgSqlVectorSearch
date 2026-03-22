@@ -1,6 +1,8 @@
 using Application.ApplicationService;
+using Application.ApplicationService.DocumentParsing;
 using Application.ApplicationServiceContract;
 using Application.ApplicationServiceContract.DocumentationService;
+using Application.ApplicationServiceContract.DocumentParsing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Application.Extensions;
@@ -26,6 +28,10 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IDocumentManagementAppService, DocumentManagementAppService>();
         services.AddScoped<IBatchOperationAppService, BatchOperationAppService>();
         services.AddScoped<IAnalyticsAppService, AnalyticsAppService>();
+
+        // 注册文档解析执行器
+        services.AddScoped<DocumentParseExecutor>();
+        services.AddScoped<IDocumentParseStrategyResolver, DocumentParseStrategyResolver>();
 
         return services;
     }

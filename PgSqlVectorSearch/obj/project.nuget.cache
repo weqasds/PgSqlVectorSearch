@@ -1,15 +1,20 @@
 {
   "version": 2,
-  "dgSpecHash": "YtH0Kb0CfEQ=",
+  "dgSpecHash": "aF5u9D99A2o=",
   "success": true,
   "projectFilePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
   "expectedPackageFiles": [
     "D:\\source\\packages\\azure.ai.openai\\2.8.0-beta.1\\azure.ai.openai.2.8.0-beta.1.nupkg.sha512",
     "D:\\source\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",
+    "D:\\source\\packages\\documentformat.openxml\\3.5.1\\documentformat.openxml.3.5.1.nupkg.sha512",
+    "D:\\source\\packages\\documentformat.openxml.framework\\3.5.1\\documentformat.openxml.framework.3.5.1.nupkg.sha512",
+    "D:\\source\\packages\\itext\\9.5.0\\itext.9.5.0.nupkg.sha512",
+    "D:\\source\\packages\\itext.commons\\9.5.0\\itext.commons.9.5.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\10.0.3\\microsoft.aspnetcore.authentication.jwtbearer.10.0.3.nupkg.sha512",
     "D:\\source\\packages\\microsoft.aspnetcore.openapi\\10.0.2\\microsoft.aspnetcore.openapi.10.0.2.nupkg.sha512",
     "D:\\source\\packages\\microsoft.bcl.asyncinterfaces\\8.0.0\\microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.bcl.hashcode\\1.1.1\\microsoft.bcl.hashcode.1.1.1.nupkg.sha512",
+    "D:\\source\\packages\\microsoft.dotnet.platformabstractions\\1.1.0\\microsoft.dotnet.platformabstractions.1.1.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.entityframeworkcore\\10.0.3\\microsoft.entityframeworkcore.10.0.3.nupkg.sha512",
     "D:\\source\\packages\\microsoft.entityframeworkcore.abstractions\\10.0.3\\microsoft.entityframeworkcore.abstractions.10.0.3.nupkg.sha512",
     "D:\\source\\packages\\microsoft.entityframeworkcore.analyzers\\10.0.3\\microsoft.entityframeworkcore.analyzers.10.0.3.nupkg.sha512",
@@ -17,6 +22,7 @@
     "D:\\source\\packages\\microsoft.extensions.ai\\10.3.0\\microsoft.extensions.ai.10.3.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.extensions.ai.abstractions\\10.3.0\\microsoft.extensions.ai.abstractions.10.3.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.extensions.ai.openai\\10.3.0\\microsoft.extensions.ai.openai.10.3.0.nupkg.sha512",
+    "D:\\source\\packages\\microsoft.extensions.dependencymodel\\1.1.0\\microsoft.extensions.dependencymodel.1.1.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.extensions.vectordata.abstractions\\10.0.1\\microsoft.extensions.vectordata.abstractions.10.0.1.nupkg.sha512",
     "D:\\source\\packages\\microsoft.identitymodel.abstractions\\8.6.0\\microsoft.identitymodel.abstractions.8.6.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.identitymodel.jsonwebtokens\\8.6.0\\microsoft.identitymodel.jsonwebtokens.8.6.0.nupkg.sha512",
@@ -31,9 +37,11 @@
     "D:\\source\\packages\\microsoft.semantickernel.connectors.openai\\1.73.0\\microsoft.semantickernel.connectors.openai.1.73.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.semantickernel.core\\1.73.0\\microsoft.semantickernel.core.1.73.0.nupkg.sha512",
     "D:\\source\\packages\\microsoft.visualstudio.azure.containers.tools.targets\\1.23.0\\microsoft.visualstudio.azure.containers.tools.targets.1.23.0.nupkg.sha512",
+    "D:\\source\\packages\\newtonsoft.json\\9.0.1\\newtonsoft.json.9.0.1.nupkg.sha512",
     "D:\\source\\packages\\npgsql\\10.0.0\\npgsql.10.0.0.nupkg.sha512",
     "D:\\source\\packages\\npgsql.entityframeworkcore.postgresql\\10.0.0\\npgsql.entityframeworkcore.postgresql.10.0.0.nupkg.sha512",
     "D:\\source\\packages\\openai\\2.8.0\\openai.2.8.0.nupkg.sha512",
+    "D:\\source\\packages\\pdfpig\\0.1.13\\pdfpig.0.1.13.nupkg.sha512",
     "D:\\source\\packages\\pgvector\\0.3.2\\pgvector.0.3.2.nupkg.sha512",
     "D:\\source\\packages\\pgvector.entityframeworkcore\\0.3.0\\pgvector.entityframeworkcore.0.3.0.nupkg.sha512",
     "D:\\source\\packages\\scalar.aspnetcore\\2.13.3\\scalar.aspnetcore.2.13.3.nupkg.sha512",
@@ -42,10 +50,24 @@
     "D:\\source\\packages\\system.configuration.configurationmanager\\8.0.0\\system.configuration.configurationmanager.8.0.0.nupkg.sha512",
     "D:\\source\\packages\\system.diagnostics.performancecounter\\8.0.0\\system.diagnostics.performancecounter.8.0.0.nupkg.sha512",
     "D:\\source\\packages\\system.identitymodel.tokens.jwt\\8.6.0\\system.identitymodel.tokens.jwt.8.6.0.nupkg.sha512",
+    "D:\\source\\packages\\system.io.packaging\\10.0.2\\system.io.packaging.10.0.2.nupkg.sha512",
     "D:\\source\\packages\\system.management\\9.0.0\\system.management.9.0.0.nupkg.sha512",
     "D:\\source\\packages\\system.memory.data\\8.0.1\\system.memory.data.8.0.1.nupkg.sha512",
     "D:\\source\\packages\\system.numerics.tensors\\10.0.3\\system.numerics.tensors.10.0.3.nupkg.sha512",
     "D:\\source\\packages\\system.security.cryptography.protecteddata\\8.0.0\\system.security.cryptography.protecteddata.8.0.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "包 \"Newtonsoft.Json\" 9.0.1 具有已知的 高 严重性漏洞，https://github.com/advisories/GHSA-5crp-9r3c-p9vr",
+      "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+      "warningLevel": 1,
+      "filePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+      "libraryId": "Newtonsoft.Json",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
 }

@@ -1,5 +1,6 @@
 using Application.ApplicationServiceContract.CrossCutting;
 using Application.ApplicationServiceContract.DocumentParsing;
+using Application.ServiceContract.CrossCutting;
 using DomainService.ServiceContract.CrossCutting;
 using Infrastructure.InfrastructureShared.DocumentParser;
 using Infrastructure.InfrastructureShared.Services;

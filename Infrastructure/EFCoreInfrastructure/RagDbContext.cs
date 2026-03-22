@@ -324,31 +324,37 @@ public class RagDbContext : DbContext, IUnitOfWork
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(x => new { x.DocumentId, x.ChunkIndex }).IsUnique();
             entity.HasIndex(x => x.DocumentId);
-            entity.OwnsOne<Embedding>(x => x.Embedding, emb =>
-            {
-                emb.ToTable("embedding");
-                emb.Property(x => x.Vector).
-                    HasColumnType("vector(1536)").
-                    IsRequired();
-                emb.HasIndex(e => e.Vector).
-                    HasMethod("hnsw").
-                    HasOperators("vector_cosine_ops");
-                emb.WithOwner(e => e.Chunk).HasForeignKey(x => x.ChunkId);
-            });
+            entity.HasOne(x => x.Embedding)
+                .WithOne(x => x.Chunk)
+                .HasForeignKey<Embedding>(x => x.ChunkId);
+            //entity.OwnsOne<Embedding>(x => x.Embedding, emb =>
+            //{
+            //    emb.ToTable("embedding");
+            //    emb.Property(x => x.Vector).
+            //        HasColumnType("vector(1536)").
+            //        IsRequired();
+            //    emb.HasIndex(e => e.Vector).
+            //        HasMethod("hnsw").
+            //        HasOperators("vector_cosine_ops");
+            //    emb.WithOwner(e => e.Chunk).HasForeignKey(x => x.ChunkId);
+            //});
         });
-        //modelBuilder.Entity<Embedding>(entity =>
-        //{
-        //    entity.ToTable("embedding");
-        //    entity.HasKey(x => x.Id);
-        //    entity.Property(x => x.Vector).
-        //        HasColumnType("vector(1536)").
-        //        IsRequired();
-        //    entity.HasOne(x => x.Chunk)
-        //        .WithMany()
-        //        .HasForeignKey(x => x.ChunkId)
-        //        .OnDelete(DeleteBehavior.Cascade);
-        //    entity.HasIndex(x => x.ChunkId).IsUnique();
-        //});
+        modelBuilder.Entity<Embedding>(entity =>
+        {
+            entity.ToTable("embedding");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Vector).
+                HasColumnType("vector(1024)").
+                IsRequired();
+            entity.HasIndex(x => x.Vector).
+                HasMethod("hnsw").
+                HasOperators("vector_cosine_ops");
+            entity.HasOne(x => x.Chunk)
+                .WithOne(x=>x.Embedding)
+                .HasForeignKey<Embedding>(x => x.ChunkId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+        });
         modelBuilder.Entity<RagRetrievalLog>(entity =>
         {
             entity.ToTable("rag_retrieval_log");

@@ -268,12 +268,16 @@ namespace DataMigration.Migrations
                 name: "embedding",
                 columns: table => new
                 {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ChunkId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Vector = table.Column<Vector>(type: "vector(1536)", nullable: false)
+                    Vector = table.Column<Vector>(type: "vector(1024)", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    ModifiedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_embedding", x => x.ChunkId);
+                    table.PrimaryKey("PK_embedding", x => x.Id);
                     table.ForeignKey(
                         name: "FK_embedding_knowledge_chunk_ChunkId",
                         column: x => x.ChunkId,
@@ -410,6 +414,12 @@ namespace DataMigration.Migrations
                 name: "IX_chat_session_UserId",
                 table: "chat_session",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_embedding_ChunkId",
+                table: "embedding",
+                column: "ChunkId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_embedding_Vector",

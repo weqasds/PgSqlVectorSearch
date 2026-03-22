@@ -22,13 +22,19 @@ public static class SemanticKernelAIServiceCollectionExtensions
         // 注册语义内核服务
 #pragma warning disable
         services.AddKernel().
-            AddOpenAIChatCompletion("").
-            AddOpenAIEmbeddingGenerator("");
+            AddOpenAIChatCompletion("deepseek-chat", new Uri("https://api.deepseek.com"), "sk-68f5ad488a6f45bba3d695b8098859f0").
+            AddOpenAIEmbeddingGenerator(
+            "Qwen/Qwen3-Embedding-0.6B",
+            "sk-1233",
+            httpClient: new HttpClient()
+            {
+                BaseAddress = new Uri("http://127.0.0.1:30000/v1")
+            });
         // 2. 注册AI相关服务
         services.AddScoped<IEmbeddingService, OpenAIEmbeddingService>();
         services.AddScoped<ILLMService, OpenAILLMService>();
         services.AddScoped<ISemanticKernelService, SemanticKernelService>();
-        
+
         return services;
     }
 }

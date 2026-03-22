@@ -4,6 +4,7 @@ using Application.Dto;
 using PgSqlVectorSearch.Model;
 using Application.Extensions;
 using Application.ApplicationServiceContract.DocumentationService;
+using Application.Models.DocumentParsing;
 
 namespace PgSqlVectorSearch.Controllers;
 
@@ -53,7 +54,8 @@ public class KnowledgeBaseController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<KnowledgeBaseDto>> CreateKnowledgeBase(
         [FromForm] CreateKnowledgeBaseRequest request,
-        [FromForm] FileUploadDto? uploadFile = null
+        [FromForm] FileUploadDto? uploadFile = null,
+        [FromForm] DocumentParseOptions? documentParseOptions = default
         )
     {
         var result = await _knowledgeBaseAppService.CreateKnowledgeBaseAsync(request);
@@ -67,7 +69,7 @@ public class KnowledgeBaseController : ControllerBase
                 ContentType = MimeTypeMapper.GetDocumentType(file.ContentType),
                 FileSize = file.Length
             };
-            await _knowledgeBaseAppService.UploadDocumentAsync(result.Id, fileUpload);
+            await _knowledgeBaseAppService.UploadDocumentAsync(result.Id, fileUpload, documentParseOptions);
         }
             ;
         return CreatedAtAction(nameof(GetKnowledgeBase), new { id = result.Id }, result);

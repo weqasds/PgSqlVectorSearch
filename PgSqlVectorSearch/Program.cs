@@ -4,10 +4,9 @@ using DomainService.Entities.Enums;
 using DomainService.Entities.KnowledgeManagement;
 using DomainService.Extension;
 using DomainService.ServiceContract.CrossCutting;
-using EFCoreInfrastructure;
-using EFCoreInfrastructure.Extensions;
+using Infrastructure.EFCoreInfrastructure;
+using Infrastructure.EFCoreInfrastructure.Extensions;
 using Infrastructure.SemanticKernelAI.Extensions;
-using InfrastructureShared.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -18,6 +17,8 @@ using Scalar.AspNetCore;
 using System.Text;
 namespace PgSqlVectorSearch;
 
+using Infrastructure.EFCoreInfrastructure.Services;
+using Infrastructure.InfrastructureShared.Extension;
 public class Program
 {
     public static void Main(string[] args)
