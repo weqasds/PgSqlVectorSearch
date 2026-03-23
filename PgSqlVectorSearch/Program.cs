@@ -79,9 +79,11 @@ public class Program
         // builder.Logging.AddDebug();
         // builder.Logging.AddEventSourceLogger();
         #region 基础设施层服务注册
-            builder.Services.AddInfrastructureSharedServices();
+            builder.Services.AddInfrastructureSharedServices(builder.Configuration);
             builder.Services.AddEFCoreInfrastructureServices();
-            builder.Services.AddSemanticKernelAIServices();
+            builder.Services.AddSemanticKernelAIServices(builder.Configuration);
+            // 注册请求跟踪服务
+            //builder.Services.AddRequestTracking();
         #endregion
         #region 领域层服务注册
             builder.Services.AddDomainServices();
@@ -137,6 +139,8 @@ public class Program
             });
         });
         var app = builder.Build();
+        // 使用请求跟踪中间件（必须在异常处理之前）
+        app.UseMiddleware<RequestTrackingMiddleware>();
         app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

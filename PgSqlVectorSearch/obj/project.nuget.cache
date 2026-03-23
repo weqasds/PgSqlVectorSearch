@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "aF5u9D99A2o=",
+  "dgSpecHash": "d0vbKfrgpsE=",
   "success": true,
   "projectFilePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
   "expectedPackageFiles": [
@@ -44,7 +44,9 @@
     "D:\\source\\packages\\pdfpig\\0.1.13\\pdfpig.0.1.13.nupkg.sha512",
     "D:\\source\\packages\\pgvector\\0.3.2\\pgvector.0.3.2.nupkg.sha512",
     "D:\\source\\packages\\pgvector.entityframeworkcore\\0.3.0\\pgvector.entityframeworkcore.0.3.0.nupkg.sha512",
+    "D:\\source\\packages\\pipelines.sockets.unofficial\\2.2.8\\pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
     "D:\\source\\packages\\scalar.aspnetcore\\2.13.3\\scalar.aspnetcore.2.13.3.nupkg.sha512",
+    "D:\\source\\packages\\stackexchange.redis\\2.8.31\\stackexchange.redis.2.8.31.nupkg.sha512",
     "D:\\source\\packages\\system.clientmodel\\1.8.1\\system.clientmodel.1.8.1.nupkg.sha512",
     "D:\\source\\packages\\system.codedom\\9.0.0\\system.codedom.9.0.0.nupkg.sha512",
     "D:\\source\\packages\\system.configuration.configurationmanager\\8.0.0\\system.configuration.configurationmanager.8.0.0.nupkg.sha512",
@@ -60,7 +62,7 @@
     {
       "code": "NU1903",
       "level": "Warning",
-      "message": "包 \"Newtonsoft.Json\" 9.0.1 具有已知的 高 严重性漏洞，https://github.com/advisories/GHSA-5crp-9r3c-p9vr",
+      "message": "Package 'Newtonsoft.Json' 9.0.1 has a known high severity vulnerability, https://github.com/advisories/GHSA-5crp-9r3c-p9vr",
       "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
       "warningLevel": 1,
       "filePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",

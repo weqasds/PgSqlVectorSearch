@@ -13,13 +13,22 @@ public class RagGenerationService : IRagGenerationService
 {
     private readonly IVectorRetrievalService _vectorRetrievalService;
     private readonly IChatService _chatService;
+    private readonly ILLMService _llmService;
+    private readonly IRagGenerationRepository _ragGenerationRepository;
+    private readonly IRagRetrievalLogRepository _ragRetrievalLogRepository;
 
     public RagGenerationService(
         IVectorRetrievalService vectorRetrievalService,
-        IChatService chatService)
+        IChatService chatService,
+        ILLMService llmService,
+        IRagGenerationRepository ragGenerationRepository,
+        IRagRetrievalLogRepository ragRetrievalLogRepository)
     {
         _vectorRetrievalService = vectorRetrievalService;
         _chatService = chatService;
+        _llmService = llmService;
+        _ragGenerationRepository = ragGenerationRepository;
+        _ragRetrievalLogRepository = ragRetrievalLogRepository;
     }
 
     public async Task<RagResponse> GenerateResponseAsync(string query, Guid? sessionId = null, Guid? knowledgeBaseId = null)
@@ -32,11 +41,8 @@ public class RagGenerationService : IRagGenerationService
             query,
             knowledgeBaseId: knowledgeBaseId);
 
-        // 构建上下文
-        var context = retrievalResults.Select(r => r.Chunk).ToList();
-
         // 生成响应
-        var response = await GenerateResponseWithContextAsync(query, context);
+        var response = await GenerateResponseWithContextAsync(query, retrievalResults);
 
         // 如果有会话ID，将消息添加到会话
         if (sessionId.HasValue)
@@ -54,41 +60,44 @@ public class RagGenerationService : IRagGenerationService
             RetrievedAt = DateTime.UtcNow
         });
 
-        // TODO: 保存生成记录和检索日志到数据库
-        // 需要创建RagGeneration实体并保存
+        // 保存生成记录
+        var ragGeneration = new RagGeneration
+        {
+            Id = Guid.NewGuid(),
+            ChatSessionId = sessionId ?? Guid.Empty,
+            Prompt = query,
+            Answer = response.Answer
+        };
+
+        await _ragGenerationRepository.AddAsync(ragGeneration);
+
+        // 保存检索日志
+        await LogRetrievalAsync(ragGeneration.Id, retrievalLogs);
 
         return response;
     }
 
-    public async Task<RagResponse> GenerateResponseWithContextAsync(string query, IEnumerable<KnowledgeChunk> context)
+    public async Task<RagResponse> GenerateResponseWithContextAsync(string query, IEnumerable<RetrievalResult> retrievalResults)
     {
         if (string.IsNullOrWhiteSpace(query))
             throw new ArgumentException("查询内容不能为空", nameof(query));
 
-        if (context == null)
-            throw new ArgumentNullException(nameof(context));
+        if (retrievalResults == null)
+            throw new ArgumentNullException(nameof(retrievalResults));
 
-        var contextList = context.ToList();
-        if (!contextList.Any())
-            throw new ArgumentException("上下文不能为空", nameof(context));
+        var resultsList = retrievalResults.ToList();
+        if (resultsList.Count == 0)
+            throw new ArgumentException("检索结果不能为空", nameof(retrievalResults));
 
-        // TODO: 调用AI服务（如OpenAI GPT）生成回答
-        // 这里构建一个简单的Prompt并调用LLM
-        // 实际实现应该使用Semantic Kernel或直接调用AI API
-
-        var prompt = BuildPrompt(query, contextList);
+        // 从检索结果中提取知识块构建上下文
+        var context = resultsList.Select(r => r.Chunk).ToList();
+        var prompt = BuildPrompt(query, context);
         var answer = await CallLargeLanguageModelAsync(prompt);
-
-        var retrievalResults = contextList.Select(chunk => new RetrievalResult
-        {
-            Chunk = chunk,
-            SimilarityScore = 0.8 // 模拟相似度分数
-        }).ToList();
 
         return new RagResponse
         {
             Answer = answer,
-            RetrievedChunks = retrievalResults,
+            RetrievedChunks = resultsList, // 使用传入的检索结果，包含实际的相似度分数
             GeneratedAt = DateTime.UtcNow
         };
     }
@@ -98,11 +107,16 @@ public class RagGenerationService : IRagGenerationService
         if (logs == null)
             throw new ArgumentNullException(nameof(logs));
 
-        // TODO: 实现检索日志记录逻辑
-        // 将检索日志保存到数据库，关联到对应的RAG生成记录
-        // 可以创建RagRetrievalLog实体并批量保存
+        // 将检索日志转换为RagRetrievalLog实体并保存
+        var ragRetrievalLogs = logs.Select(log => new RagRetrievalLog
+        {
+            Id = Guid.NewGuid(),
+            RagGenerationId = generationId,
+            ChunkId = log.ChunkId,
+            Score = (float)log.Score
+        });
 
-        await Task.CompletedTask; // 临时实现
+        await _ragRetrievalLogRepository.AddRangeAsync(ragRetrievalLogs);
     }
 
     private string BuildPrompt(string query, List<KnowledgeChunk> context)
@@ -121,10 +135,7 @@ public class RagGenerationService : IRagGenerationService
 
     private async Task<string> CallLargeLanguageModelAsync(string prompt)
     {
-        // TODO: 实际调用AI服务
-        // 这里返回模拟响应
-        await Task.Delay(100); // 模拟网络延迟
-
-        return "这是一个基于检索到的上下文生成的模拟回答。实际实现需要集成大型语言模型服务。";
+        // 调用真实AI服务
+        return await _llmService.GenerateResponseAsync(prompt);
     }
 }

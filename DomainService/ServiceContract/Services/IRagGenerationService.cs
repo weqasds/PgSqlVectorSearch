@@ -8,6 +8,6 @@ namespace DomainService.ServiceContract.Services;
 public interface IRagGenerationService
 {
     Task<RagResponse> GenerateResponseAsync(string query, Guid? sessionId = null, Guid? knowledgeBaseId = null);
-    Task<RagResponse> GenerateResponseWithContextAsync(string query, IEnumerable<KnowledgeChunk> context);
+    Task<RagResponse> GenerateResponseWithContextAsync(string query, IEnumerable<RetrievalResult> retrievalResults);
     Task LogRetrievalAsync(Guid generationId, IEnumerable<RetrievalLog> logs);
 }

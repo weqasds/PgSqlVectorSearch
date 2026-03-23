@@ -1085,6 +1085,9 @@
               },
               "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj": {
                 "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\DomainService\\DomainService.csproj"
+              },
+              "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj": {
+                "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\Infrastructure\\EFCoreInfrastructure\\EFCoreInfrastructure.csproj"
               }
             }
           }
@@ -1115,11 +1118,15 @@
             },
             "Microsoft.Extensions.Options": {
               "target": "Package",
-              "version": "[10.0.0, )"
+              "version": "[10.0.3, )"
             },
             "PdfPig": {
               "target": "Package",
               "version": "[0.1.13, )"
+            },
+            "StackExchange.Redis": {
+              "target": "Package",
+              "version": "[2.8.31, )"
             },
             "System.Diagnostics.PerformanceCounter": {
               "target": "Package",
@@ -1485,6 +1492,10 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "dependencies": {
+            "Microsoft.Extensions.Configuration.Binder": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
             "Microsoft.SemanticKernel": {
               "target": "Package",
               "version": "[1.73.0, )"

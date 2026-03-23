@@ -4,7 +4,9 @@ using Application.ServiceContract.CrossCutting;
 using DomainService.ServiceContract.CrossCutting;
 using Infrastructure.InfrastructureShared.DocumentParser;
 using Infrastructure.InfrastructureShared.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace Infrastructure.InfrastructureShared.Extension;
 
@@ -17,10 +19,15 @@ public static class InfrastructureSharedServiceCollectionExtensions
     /// 注册InfrastructureShared基础设施层的所有服务
     /// </summary>
     /// <param name="services">服务集合</param>
+    /// <param name="configuration">配置</param>
     /// <returns>服务集合，支持链式调用</returns>
-    public static IServiceCollection AddInfrastructureSharedServices(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructureSharedServices(this IServiceCollection services, IConfiguration configuration)
     {
-        
+        // 注册Redis连接
+        var redisConnectionString = configuration.GetSection("Redis:ConnectionString").Value ?? "localhost:6379";
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+            ConnectionMultiplexer.Connect(redisConnectionString));
+
         // 1. 注册跨领域服务
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -29,7 +36,7 @@ public static class InfrastructureSharedServiceCollectionExtensions
         // 2. 注册基础设施服务
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<IFileStorageService, FileStorageService>();
-        services.AddScoped<ITaskQueueService, TaskQueueService>();
+        services.AddScoped<ITaskQueueService, RedisTaskQueueService>(); // 使用Redis实现
         services.AddScoped<IAuditLogService, AuditLogService>();
 
         // 3. 注册文档解析器
@@ -39,7 +46,7 @@ public static class InfrastructureSharedServiceCollectionExtensions
         services.AddScoped<IDocumentParser, ExcelDocumentParser>();
         // 注意：同一个接口的多个实现会以集合形式注入，可通过 IEnumerable<IDocumentParser> 获取所有解析器。
         services.AddScoped<IDocumentParserSelector, DocumentParserSelector>();
-
+        services.AddScoped<RequestTrackingService>();
         return services;
     }
 }
