@@ -18,7 +18,7 @@ def validate_parse_request(request: ParseRequest) -> None:
     Raises:
         ValidationError: 验证失败
     """
-    logger.debug("验证解析请求参数", extra={"request": request.dict()})
+    logger.debug("验证解析请求参数", extra={"request": request.model_dump()})
 
     # 验证解析策略
     _validate_strategy(request.strategy)

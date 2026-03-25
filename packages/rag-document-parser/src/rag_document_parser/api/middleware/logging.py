@@ -15,11 +15,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     """请求日志中间件"""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # 记录请求开始
         start_time = time.time()
-        request_id = (request.state, "request_id", "unknown")
+        request_id = getattr(request.state, "request_id", "unknown")
 
-        # 记录请求信息
         logger.info(
             "请求开始",
             extra={
@@ -32,13 +30,8 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         )
 
         try:
-            # 处理请求
             response = await call_next(request)
-
-            # 计算处理时间
             process_time = time.time() - start_time
-
-            # 记录响应信息
             logger.info(
                 "请求完成",
                 extra={
@@ -50,18 +43,11 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "content_length": response.headers.get("content-length", 0),
                 },
             )
-
-            # 添加响应头
-            response.headers["X-Process-Time"] = str(process_time)
-            response.headers["X-Request-ID"] = request_id
-
+            response.headers["X-Process-Time"] = f"{process_time:.6f}"
+            response.headers["X-Request-ID"] = str(request_id)
             return response
-
         except Exception as exc:
-            # 计算处理时间
             process_time = time.time() - start_time
-
-            # 记录异常
             logger.error(
                 "请求异常",
                 extra={
@@ -73,7 +59,6 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 },
                 exc_info=exc,
             )
-
             raise
 
 
@@ -83,18 +68,8 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         import uuid
 
-        # 获取或生成请求ID
-        request_id = request.headers.get("X-Request-ID")
-        if not request_id:
-            request_id = str(uuid.uuid4())
-
-        # 存储到request.state
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
         request.state.request_id = request_id
-
-        # 继续处理
         response = await call_next(request)
-
-        # 添加响应头
         response.headers["X-Request-ID"] = request_id
-
         return response

@@ -1,346 +1,192 @@
 """PyMuPDF PDF解析引擎"""
 import asyncio
-import json
+import re
 import traceback
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
 
-import fitz  # PyMuPDF
-from PIL import Image
-import numpy as np
+import fitz
 
 from rag_document_parser.engines.base import BaseParserEngine
 from rag_document_parser.models.schemas import (
+    BoundingBox,
+    DocumentMetadata,
+    DocumentStructure,
+    FileType,
+    Heading,
+    ImageInfo,
+    PageContent,
+    PageMetadata,
+    Paragraph,
     ParseRequest,
     ParseResult,
-    DocumentMetadata,
-    PageContent,
     Table,
-    ImageInfo,
-    ParseStrategy
 )
-from rag_document_parser.services.exceptions import (
-    DocumentParserError,
-    ParsingFailedError
-)
+from rag_document_parser.services.exceptions import ParsingFailedError
 
 
 class PyMuPDFEngine(BaseParserEngine):
-    """PyMuPDF PDF解析引擎
+    """基于PyMuPDF的PDF主解析引擎。"""
 
-    基于PyMuPDF库，提供高性能PDF解析，支持文本提取、
-    元数据获取、图片提取等。
-    """
-
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("pymupdf")
         self.supported_extensions = ["pdf"]
 
-    async def parse(
-        self,
-        file_path: Path,
-        request: ParseRequest,
-        request_id: str
-    ) -> ParseResult:
-        """解析PDF文档
-
-        Args:
-            file_path: PDF文件路径
-            request: 解析请求参数
-            request_id: 请求ID
-
-        Returns:
-            ParseResult: 解析结果
-        """
+    async def parse(self, file_path: Path, request: ParseRequest, request_id: str) -> ParseResult:
         self.log_info(
             "开始解析PDF文档",
-            extra={
-                "request_id": request_id,
-                "file_path": str(file_path),
-                "strategy": request.strategy.value
-            }
+            extra={"request_id": request_id, "file_path": str(file_path), "strategy": request.strategy.value},
         )
-
         try:
-            # 异步执行PDF解析（CPU密集型操作使用线程池）
-            loop = asyncio.get_event_loop()
-            parse_result = await loop.run_in_executor(
-                None,
-                self._parse_sync,
-                file_path,
-                request,
-                request_id
-            )
-
+            loop = asyncio.get_running_loop()
+            result = await loop.run_in_executor(None, self._parse_sync, file_path, request)
             self.log_info(
                 "PDF解析完成",
                 extra={
                     "request_id": request_id,
                     "file_path": str(file_path),
-                    "pages_count": parse_result.document_metadata.page_count
-                }
+                    "pages_count": result.document_metadata.page_count,
+                },
             )
-
-            return parse_result
-
+            return result
         except Exception as exc:
             self.log_error(
                 "PDF解析失败",
-                extra={
-                    "request_id": request_id,
-                    "file_path": str(file_path),
-                    "error": str(exc),
-                    "traceback": traceback.format_exc()
-                }
+                extra={"request_id": request_id, "file_path": str(file_path), "error": str(exc), "traceback": traceback.format_exc()},
             )
             raise ParsingFailedError(
                 f"PDF解析失败: {str(exc)}",
-                details={"engine": self.name}
-            )
+                details={"engine": self.name, "file_path": str(file_path)},
+            ) from exc
 
-    def _parse_sync(
-        self,
-        file_path: Path,
-        request: ParseRequest,
-        request_id: str
-    ) -> ParseResult:
-        """同步解析PDF文档（在executor中运行）"""
-        doc = None
-        try:
-            # 打开PDF文档
-            doc = fitz.open(file_path)
-
-            # 提取文档元数据
-            metadata = self._extract_metadata(doc)
-
-            # 提取页面内容
-            pages_content = []
-            for page_num in range(len(doc)):
-                page = doc[page_num]
-                page_content = self._extract_page_content(
-                    page, page_num, request, request_id
-                )
-                pages_content.append(page_content)
-
-            # 提取文档结构（标题、段落等）
-            structure = self._extract_structure(doc, pages_content)
-
-            # 创建解析结果
-            result = ParseResult(
+    def _parse_sync(self, file_path: Path, request: ParseRequest) -> ParseResult:
+        with fitz.open(file_path) as document:
+            metadata = self._extract_metadata(document, file_path)
+            pages_content = [
+                self._extract_page_content(page, page_num, request)
+                for page_num, page in enumerate(document)
+            ]
+            structure = self._extract_structure(document, pages_content)
+            return ParseResult(
                 content=pages_content,
                 document_metadata=metadata,
                 structure=structure,
-                ocr_triggered=False  # PyMuPDF使用原生文本提取，不触发OCR
+                ocr_triggered=False,
             )
 
-            return result
+    def _parse_pdf_date(self, date_str: str | None) -> datetime | None:
+        if not date_str:
+            return None
 
-        finally:
-            if doc:
-                doc.close()
+        match = re.match(
+            r"D:(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})([+-]\d{2})'(\d{2})'",
+            date_str,
+        )
+        if not match:
+            return None
 
-    def _extract_metadata(self, doc: fitz.Document) -> DocumentMetadata:
-        """提取文档元数据"""
-        metadata_dict = doc.metadata
-
-        return DocumentMetadata(
-            title=metadata_dict.get("title", ""),
-            author=metadata_dict.get("author", ""),
-            subject=metadata_dict.get("subject", ""),
-            keywords=metadata_dict.get("keywords", "").split(",") if metadata_dict.get("keywords") else [],
-            created_date=metadata_dict.get("creationDate", ""),
-            modified_date=metadata_dict.get("modDate", ""),
-            page_count=len(doc)
+        year, month, day, hour, minute, second, tz_hour, tz_minute = match.groups()
+        offset = timedelta(hours=int(tz_hour), minutes=int(tz_minute))
+        return datetime(
+            int(year),
+            int(month),
+            int(day),
+            int(hour),
+            int(minute),
+            int(second),
+            tzinfo=timezone(offset),
         )
 
-    def _extract_page_content(
-        self,
-        page: fitz.Page,
-        page_num: int,
-        request: ParseRequest,
-        request_id: str
-    ) -> PageContent:
-        """提取页面内容"""
-        # 提取文本
-        text = page.get_text()
+    def _extract_metadata(self, document: fitz.Document, file_path: Path) -> DocumentMetadata:
+        metadata_dict = document.metadata
+        return DocumentMetadata(
+            title=metadata_dict.get("title") or file_path.stem,
+            author=metadata_dict.get("author") or None,
+            subject=metadata_dict.get("subject") or None,
+            keywords=[item.strip() for item in metadata_dict.get("keywords", "").split(",") if item.strip()],
+            created_date=self._parse_pdf_date(metadata_dict.get("creationDate")),
+            modified_date=self._parse_pdf_date(metadata_dict.get("modDate")),
+            page_count=len(document),
+            file_size=file_path.stat().st_size if file_path.exists() else None,
+            file_type=FileType.PDF,
+        )
 
-        # 初始化表格和图片列表
-        tables = []
-        images = []
-
-        # 提取表格（如果启用）
-        if request.extract_tables:
-            tables = self._extract_tables(page, page_num, request_id)
-
-        # 提取图片信息（如果启用）
-        if request.extract_images:
-            images = self._extract_images(page, page_num, request_id)
-
-        # 获取页面元数据
-        page_metadata = self._extract_page_metadata(page)
-
+    def _extract_page_content(self, page: fitz.Page, page_num: int, request: ParseRequest) -> PageContent:
+        text = page.get_text("text") or ""
+        tables = self._extract_tables(page) if request.extract_tables else []
+        images = self._extract_images(page) if request.extract_images else []
         return PageContent(
-            page=page_num + 1,  # 页面编号从1开始
+            page=page_num + 1,
             text=text,
             tables=tables,
             images=images,
-            metadata=page_metadata
+            metadata=PageMetadata(
+                dimensions={"width": float(page.rect.width), "height": float(page.rect.height)},
+                rotation=page.rotation,
+                page_number=page_num + 1,
+            ),
         )
 
-    def _extract_tables(
-        self,
-        page: fitz.Page,
-        page_num: int,
-        request_id: str
-    ) -> List[Table]:
-        """提取表格
-
-        注意：PyMuPDF的表格检测能力有限，这里使用简单规则检测表格。
-        实际生产环境可以集成pdfplumber进行表格提取。
-        """
-        tables = []
+    def _extract_tables(self, page: fitz.Page) -> list[Table]:
         try:
-            # 使用PyMuPDF的get_text提取文本块信息
-            blocks = page.get_text("dict")["blocks"]
+            finder = page.find_tables()
+        except Exception:
+            return []
 
-            # 简单规则：检测可能包含表格的区域
-            # 实际实现可能需要更复杂的算法
-            for block in blocks:
-                if block["type"] == 0:  # 文本块
-                    # 检查是否有类似表格的结构（多行对齐的文本）
-                    # 这里只是一个简单示例
-                    pass
-
-            # 如果启用了高级表格检测，可以调用pdfplumber
-            # 这里暂时返回空列表
-
-        except Exception as exc:
-            self.log_warning(
-                "表格提取失败",
-                extra={
-                    "request_id": request_id,
-                    "page": page_num + 1,
-                    "error": str(exc)
-                }
-            )
-
+        tables: list[Table] = []
+        for index, table in enumerate(getattr(finder, "tables", [])):
+            rows = table.extract()
+            cleaned_rows = [
+                [str(cell).strip() if cell is not None else "" for cell in row]
+                for row in rows
+            ]
+            bbox = None
+            if getattr(table, "bbox", None):
+                x1, y1, x2, y2 = table.bbox
+                bbox = BoundingBox(x1=float(x1), y1=float(y1), x2=float(x2), y2=float(y2))
+            if cleaned_rows:
+                tables.append(Table(table_index=index, rows=cleaned_rows, bbox=bbox))
         return tables
 
-    def _extract_images(
-        self,
-        page: fitz.Page,
-        page_num: int,
-        request_id: str
-    ) -> List[ImageInfo]:
-        """提取图片信息"""
-        images = []
-        try:
-            # 获取页面中的所有图片
-            image_list = page.get_images()
-
-            for img_index, img_info in enumerate(image_list):
-                try:
-                    # 提取图片基本信息和边界框
-                    # 注意：PyMuPDF中图片定位信息有限
-                    xref = img_info[0]
-
-                    # 这里我们可以获取图片的边界框
-                    # 实际实现可能需要更复杂的图像处理
-
-                    image_info = ImageInfo(
-                        image_index=img_index,
-                        description=f"图片{img_index + 1}",
-                        bbox=[0, 0, 0, 0]  # 占位符，实际需要计算
-                    )
-                    images.append(image_info)
-
-                except Exception as img_exc:
-                    self.log_warning(
-                        "单张图片提取失败",
-                        extra={
-                            "request_id": request_id,
-                            "page": page_num + 1,
-                            "image_index": img_index,
-                            "error": str(img_exc)
-                        }
-                    )
-
-        except Exception as exc:
-            self.log_warning(
-                "图片提取失败",
-                extra={
-                    "request_id": request_id,
-                    "page": page_num + 1,
-                    "error": str(exc)
-                }
-            )
-
+    def _extract_images(self, page: fitz.Page) -> list[ImageInfo]:
+        images: list[ImageInfo] = []
+        for index, image in enumerate(page.get_images(full=True)):
+            xref = image[0]
+            rects = page.get_image_rects(xref)
+            bbox = None
+            if rects:
+                rect = rects[0]
+                bbox = BoundingBox(x1=float(rect.x0), y1=float(rect.y0), x2=float(rect.x1), y2=float(rect.y1))
+            images.append(ImageInfo(image_index=index, description=f"图片{index + 1}", bbox=bbox))
         return images
 
-    def _extract_page_metadata(self, page: fitz.Page) -> Dict[str, Any]:
-        """提取页面元数据"""
-        rect = page.rect
-
-        return {
-            "dimensions": {
-                "width": rect.width,
-                "height": rect.height
-            },
-            "rotation": page.rotation,
-            "crop_box": list(page.cropbox),
-            "media_box": list(page.mediabox)
-        }
-
-    def _extract_structure(
-        self,
-        doc: fitz.Document,
-        pages_content: List[PageContent]
-    ) -> Dict[str, Any]:
-        """提取文档结构（标题、段落等）"""
-        headings = []
-        paragraphs = []
+    def _extract_structure(self, document: fitz.Document, pages_content: list[PageContent]) -> DocumentStructure:
+        headings: list[Heading] = []
+        paragraphs: list[Paragraph] = []
 
         try:
-            # 提取目录（如果有）
-            toc = doc.get_toc()
+            toc = document.get_toc(simple=False)
             for item in toc:
-                level, title, page_num, _ = item
-                # 查找标题在页面中的位置（简化版）
-                headings.append({
-                    "level": level,
-                    "text": title,
-                    "page": page_num,
-                    "bbox": [0, 0, 0, 0]  # 占位符
-                })
+                level, title, page_num, *_ = item
+                headings.append(Heading(level=level, text=title, page=page_num, bbox=None))
+        except Exception:
+            pass
 
-            # 提取段落信息
-            for page_content in pages_content:
-                if page_content.text.strip():
-                    # 简单按换行符分割段落
-                    lines = page_content.text.strip().split('\n')
-                    for line in lines:
-                        if line.strip():
-                            paragraphs.append({
-                                "text": line.strip(),
-                                "page": page_content.page,
-                                "bbox": [0, 0, 0, 0]  # 占位符
-                            })
+        for page_content in pages_content:
+            for block in page_content.text.split("\n\n"):
+                block_text = block.strip()
+                if not block_text:
+                    continue
+                lines = block_text.splitlines()
+                if len(lines) == 1 and len(block_text) <= 80:
+                    headings.append(Heading(level=2, text=block_text, page=page_content.page, bbox=None))
+                else:
+                    paragraphs.append(Paragraph(text=block_text, page=page_content.page, bbox=None))
 
-        except Exception as exc:
-            self.log_warning(
-                "文档结构提取失败",
-                extra={"error": str(exc)}
-            )
-
-        return {
-            "headings": headings,
-            "paragraphs": paragraphs
-        }
+        return DocumentStructure(headings=headings, paragraphs=paragraphs)
 
     def supports(self, file_extension: str) -> bool:
-        """检查是否支持指定的文件扩展名"""
         return file_extension.lower() in self.supported_extensions
 
     def get_priority(self) -> int:
-        """获取引擎优先级"""
-        return 100  # PyMuPDF作为主PDF引擎，优先级最高
+        return 100

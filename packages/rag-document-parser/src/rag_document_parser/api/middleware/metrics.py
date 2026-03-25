@@ -1,130 +1,99 @@
-"""指标中间件"""
+"""指标与限流中间件"""
+from collections import defaultdict, deque
 import time
 from typing import Callable
 
 from fastapi import Request
+from prometheus_client import Counter, Gauge, Histogram
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
+from rag_document_parser.models.responses import create_error_response
 from rag_document_parser.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+REQUESTS_TOTAL = Counter(
+    "document_parser_requests_total",
+    "文档解析服务请求总数",
+    ["method", "endpoint", "status_code"],
+)
+REQUEST_DURATION = Histogram(
+    "document_parser_request_duration_seconds",
+    "文档解析服务请求耗时",
+    ["method", "endpoint"],
+)
+PARSED_DOCUMENTS_TOTAL = Counter(
+    "document_parser_parsed_documents_total",
+    "成功完成的解析请求数",
+    ["endpoint"],
+)
+ACTIVE_REQUESTS = Gauge(
+    "document_parser_active_requests",
+    "当前正在处理的请求数",
+)
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):
     """指标收集中间件"""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # 记录开始时间
         start_time = time.time()
+        ACTIVE_REQUESTS.inc()
+        try:
+            response = await call_next(request)
+        finally:
+            ACTIVE_REQUESTS.dec()
 
-        # 处理请求
-        response = await call_next(request)
-
-        # 计算处理时间
         process_time = time.time() - start_time
+        endpoint = request.url.path
+        REQUESTS_TOTAL.labels(request.method, endpoint, response.status_code).inc()
+        REQUEST_DURATION.labels(request.method, endpoint).observe(process_time)
 
-        # 收集指标
-        self._collect_metrics(request, response, process_time)
+        if response.status_code < 400 and endpoint.startswith("/parse"):
+            PARSED_DOCUMENTS_TOTAL.labels(endpoint=endpoint).inc()
 
+        logger.debug(
+            "请求指标",
+            extra={
+                "method": request.method,
+                "endpoint": endpoint,
+                "status_code": response.status_code,
+                "process_time": process_time,
+            },
+        )
         return response
-
-    def _collect_metrics(self, request: Request, response: Response, process_time: float):
-        """收集指标数据"""
-        # 这里收集的指标可以发送到Prometheus或其他监控系统
-        metrics_data = {
-            "method": request.method,
-            "endpoint": request.url.path,
-            "status_code": response.status_code,
-            "process_time": process_time,
-            "client_ip": request.client.host if request.client else "unknown",
-            "user_agent": request.headers.get("user-agent", ""),
-            "content_length": response.headers.get("content-length", 0),
-        }
-
-        # 记录到日志（实际应该发送到监控系统）
-        logger.debug("请求指标", extra=metrics_data)
-
-        # TODO: 发送到Prometheus
-        # 这里可以集成prometheus_client
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """速率限制中间件"""
+    """简单内存限流中间件"""
 
     def __init__(self, app, max_requests_per_second: int = 10):
         super().__init__(app)
         self.max_requests_per_second = max_requests_per_second
-        self.request_counts = {}
+        self.request_records: dict[str, deque[float]] = defaultdict(deque)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         client_ip = request.client.host if request.client else "unknown"
         current_time = time.time()
+        records = self.request_records[client_ip]
+        window_start = current_time - 1.0
 
-        # 清理旧记录
-        self._cleanup_old_records(current_time)
+        while records and records[0] < window_start:
+            records.popleft()
 
-        # 检查速率限制
-        if self._is_rate_limited(client_ip, current_time):
+        if len(records) >= self.max_requests_per_second:
             logger.warning(
                 "速率限制触发",
-                extra={
-                    "client_ip": client_ip,
-                    "url": str(request.url),
-                    "method": request.method,
-                },
+                extra={"client_ip": client_ip, "url": str(request.url), "method": request.method},
             )
-
-            from fastapi.responses import JSONResponse
-            from rag_document_parser.models.responses import create_error_response
-
             error_response = create_error_response(
                 code="RATE_LIMIT_EXCEEDED",
                 message="请求过于频繁，请稍后再试",
-                details={
-                    "limit": self.max_requests_per_second,
-                    "window": "1 second",
-                },
+                details={"limit": self.max_requests_per_second, "window": "1 second"},
+                metadata={"request_id": getattr(request.state, "request_id", "")},
             )
+            return JSONResponse(status_code=429, content=error_response, headers={"Retry-After": "1"})
 
-            return JSONResponse(
-                status_code=429,
-                content=error_response,
-                headers={"Retry-After": "1"},
-            )
-
-        # 记录请求
-        self._record_request(client_ip, current_time)
-
-        # 继续处理
+        records.append(current_time)
         return await call_next(request)
-
-    def _cleanup_old_records(self, current_time: float):
-        """清理1秒前的记录"""
-        one_second_ago = current_time - 1.0
-        self.request_counts = {
-            ip: count for ip, count in self.request_counts.items()
-            if count["timestamp"] > one_second_ago
-        }
-
-    def _is_rate_limited(self, client_ip: str, current_time: float) -> bool:
-        """检查是否超过速率限制"""
-        if client_ip not in self.request_counts:
-            return False
-
-        count_info = self.request_counts[client_ip]
-        return count_info["count"] >= self.max_requests_per_second
-
-    def _record_request(self, client_ip: str, current_time: float):
-        """记录请求"""
-        if client_ip not in self.request_counts:
-            self.request_counts[client_ip] = {"count": 1, "timestamp": current_time}
-        else:
-            count_info = self.request_counts[client_ip]
-            # 如果是在同一秒内，增加计数
-            if current_time - count_info["timestamp"] < 1.0:
-                count_info["count"] += 1
-            else:
-                # 否则重置计数
-                count_info["count"] = 1
-                count_info["timestamp"] = current_time

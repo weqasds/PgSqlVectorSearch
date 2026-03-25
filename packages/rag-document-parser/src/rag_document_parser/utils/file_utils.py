@@ -1,83 +1,150 @@
 """文件处理工具函数"""
-import asyncio
-import mimetypes
 from pathlib import Path
-from typing import Optional, Dict, Any, Set
+from typing import Any
+import mimetypes
+import uuid
 
-from fastapi import UploadFile, HTTPException
+from fastapi import UploadFile
+
 from rag_document_parser.models.schemas import FileType
 from rag_document_parser.services.exceptions import FileValidationError
 from rag_document_parser.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-# 可选导入python-magic
 try:
-    import magic  # python-magic
+    import magic
+
     MAGIC_AVAILABLE = True
 except ImportError:
     MAGIC_AVAILABLE = False
     logger.warning("python-magic未安装，文件类型检测将仅使用扩展名和MIME类型")
 
-# 支持的格式映射
-SUPPORTED_FORMATS = {
+SUPPORTED_FORMATS: dict[str, dict[str, Any]] = {
     "pdf": {
         "description": "便携式文档格式",
         "extensions": ["pdf"],
-        "mime_types": ["application/pdf"]
+        "mime_types": ["application/pdf"],
     },
     "docx": {
         "description": "Microsoft Word文档",
         "extensions": ["docx"],
-        "mime_types": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+        "mime_types": [
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ],
     },
     "doc": {
         "description": "旧版Microsoft Word文档",
         "extensions": ["doc"],
-        "mime_types": ["application/msword"]
+        "mime_types": ["application/msword"],
     },
     "xlsx": {
         "description": "Microsoft Excel工作簿",
         "extensions": ["xlsx"],
-        "mime_types": ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+        "mime_types": [
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ],
     },
     "xls": {
         "description": "旧版Microsoft Excel工作簿",
         "extensions": ["xls"],
-        "mime_types": ["application/vnd.ms-excel"]
+        "mime_types": ["application/vnd.ms-excel"],
     },
     "pptx": {
         "description": "Microsoft PowerPoint演示文稿",
         "extensions": ["pptx"],
-        "mime_types": ["application/vnd.openxmlformats-officedocument.presentationml.presentation"]
+        "mime_types": [
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        ],
     },
     "ppt": {
         "description": "旧版Microsoft PowerPoint演示文稿",
         "extensions": ["ppt"],
-        "mime_types": ["application/vnd.ms-powerpoint"]
+        "mime_types": ["application/vnd.ms-powerpoint"],
     },
     "txt": {
         "description": "纯文本文件",
         "extensions": ["txt"],
-        "mime_types": ["text/plain"]
-    }
+        "mime_types": ["text/plain"],
+    },
+    "png": {
+        "description": "PNG图像",
+        "extensions": ["png"],
+        "mime_types": ["image/png"],
+    },
+    "jpeg": {
+        "description": "JPEG图像",
+        "extensions": ["jpeg", "jpg"],
+        "mime_types": ["image/jpeg"],
+    },
+    "tiff": {
+        "description": "TIFF图像",
+        "extensions": ["tiff", "tif"],
+        "mime_types": ["image/tiff"],
+    },
+    "bmp": {
+        "description": "BMP图像",
+        "extensions": ["bmp"],
+        "mime_types": ["image/bmp"],
+    },
+    "gif": {
+        "description": "GIF图像",
+        "extensions": ["gif"],
+        "mime_types": ["image/gif"],
+    },
+    "webp": {
+        "description": "WebP图像",
+        "extensions": ["webp"],
+        "mime_types": ["image/webp"],
+    },
+}
+
+_EXTENSION_MAP = {
+    "pdf": FileType.PDF,
+    "doc": FileType.DOC,
+    "docx": FileType.DOCX,
+    "xls": FileType.XLS,
+    "xlsx": FileType.XLSX,
+    "ppt": FileType.PPT,
+    "pptx": FileType.PPTX,
+    "txt": FileType.TXT,
+    "png": FileType.PNG,
+    "jpg": FileType.JPG,
+    "jpeg": FileType.JPEG,
+    "tif": FileType.TIF,
+    "tiff": FileType.TIFF,
+    "bmp": FileType.BMP,
+    "gif": FileType.GIF,
+    "webp": FileType.WEBP,
+    "ppm": FileType.PPM,
+    "pgm": FileType.PGM,
+    "pbm": FileType.PBM,
+    "pnm": FileType.PNM,
+}
+
+_MIME_MAP = {
+    "application/pdf": FileType.PDF,
+    "application/msword": FileType.DOC,
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": FileType.DOCX,
+    "application/vnd.ms-excel": FileType.XLS,
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": FileType.XLSX,
+    "application/vnd.ms-powerpoint": FileType.PPT,
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": FileType.PPTX,
+    "text/plain": FileType.TXT,
+    "image/png": FileType.PNG,
+    "image/jpeg": FileType.JPEG,
+    "image/tiff": FileType.TIFF,
+    "image/bmp": FileType.BMP,
+    "image/gif": FileType.GIF,
+    "image/webp": FileType.WEBP,
 }
 
 
 async def validate_file_size(file: UploadFile, max_size: int) -> None:
-    """验证文件大小
-
-    Args:
-        file: 上传的文件
-        max_size: 最大文件大小（字节）
-
-    Raises:
-        FileValidationError: 文件大小超过限制
-    """
-    # 获取文件大小
-    file.file.seek(0, 2)  # 移动到文件末尾
+    """验证上传文件大小。"""
+    file.file.seek(0, 2)
     file_size = file.file.tell()
-    file.file.seek(0)  # 重置文件指针
+    file.file.seek(0)
 
     if file_size > max_size:
         raise FileValidationError(
@@ -85,218 +152,135 @@ async def validate_file_size(file: UploadFile, max_size: int) -> None:
             details={
                 "file_size": file_size,
                 "max_size": max_size,
-                "max_size_mb": max_size / (1024 * 1024)
-            }
+                "max_size_mb": max_size / (1024 * 1024),
+            },
         )
 
-    logger.debug(f"文件大小验证通过: {file.filename}, size={file_size}")
+    logger.debug("文件大小验证通过", extra={"filename": file.filename, "size": file_size})
 
 
 async def detect_file_type(file: UploadFile) -> FileType:
-    """检测文件类型
-
-    Args:
-        file: 上传的文件
-
-    Returns:
-        FileType: 检测到的文件类型
-
-    Raises:
-        FileValidationError: 文件类型检测失败
-    """
-    # 方法1: 通过文件扩展名
-    filename = file.filename.lower()
-    extension = Path(filename).suffix.lstrip('.')
-
-    # 方法2: 通过MIME类型
+    """检测文件类型。"""
+    filename = (file.filename or "").lower()
+    extension = Path(filename).suffix.lstrip(".")
     content_type = file.content_type
+    detected_mime: str | None = None
 
-    # 方法3: 通过文件内容魔法字节（如果可用）
-    file_content = None
     try:
-        # 读取文件开头部分进行检测
         file.file.seek(0)
-        file_content = await file.read(4096)
+        header = await file.read(4096)
         file.file.seek(0)
 
-        # 使用python-magic检测（如果可用）
-        detected_mime = None
-        if MAGIC_AVAILABLE and file_content:
+        if MAGIC_AVAILABLE and header:
             try:
-                mime = magic.Magic(mime=True)
-                detected_mime = mime.from_buffer(file_content)
-            except Exception as magic_exc:
-                logger.warning(
-                    "python-magic检测失败",
-                    extra={"error": str(magic_exc)}
-                )
-                detected_mime = None
+                detected_mime = magic.Magic(mime=True).from_buffer(header)
+            except Exception as exc:  # pragma: no cover - 依赖可选
+                logger.warning("python-magic检测失败", extra={"error": str(exc)})
 
-        logger.debug(
-            "文件类型检测",
-            extra={
-                "filename": filename,
-                "extension": extension,
-                "content_type": content_type,
-                "detected_mime": detected_mime,
-                "magic_available": MAGIC_AVAILABLE
-            }
-        )
-
-        # 根据检测结果确定文件类型
-        file_type = _determine_file_type(extension, content_type, detected_mime)
-
-        if file_type == FileType.UNKNOWN:
+        file_type = _determine_file_type(extension, content_type, detected_mime, header)
+        if file_type is FileType.UNKNOWN:
             raise FileValidationError(
                 "无法识别的文件类型",
                 details={
                     "filename": filename,
                     "extension": extension,
                     "content_type": content_type,
-                    "detected_mime": detected_mime
-                }
+                    "detected_mime": detected_mime,
+                },
             )
 
         return file_type
-
+    except FileValidationError:
+        raise
     except Exception as exc:
-        logger.warning(
-            "文件类型检测失败",
-            extra={
-                "filename": filename,
-                "error": str(exc)
-            }
-        )
+        logger.warning("文件类型检测失败", extra={"filename": filename, "error": str(exc)})
         raise FileValidationError(
             f"文件类型检测失败: {str(exc)}",
-            details={"filename": filename}
-        )
+            details={"filename": filename},
+        ) from exc
 
 
 def _determine_file_type(
     extension: str,
-    content_type: Optional[str],
-    detected_mime: Optional[str]
+    content_type: str | None,
+    detected_mime: str | None,
+    header: bytes | None,
 ) -> FileType:
-    """根据扩展名、MIME类型和检测到的MIME类型确定文件类型"""
-    # 扩展名映射
-    extension_map = {
-        "pdf": FileType.PDF,
-        "docx": FileType.DOCX,
-        "doc": FileType.DOC,
-        "xlsx": FileType.XLSX,
-        "xls": FileType.XLS,
-        "pptx": FileType.PPTX,
-        "ppt": FileType.PPT,
-        "txt": FileType.TXT,
-    }
+    """根据扩展名、MIME类型和文件头判断文件类型。"""
+    if extension in _EXTENSION_MAP:
+        return _EXTENSION_MAP[extension]
 
-    # MIME类型映射
-    mime_map = {
-        "application/pdf": FileType.PDF,
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": FileType.DOCX,
-        "application/msword": FileType.DOC,
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": FileType.XLSX,
-        "application/vnd.ms-excel": FileType.XLS,
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation": FileType.PPTX,
-        "application/vnd.ms-powerpoint": FileType.PPT,
-        "text/plain": FileType.TXT,
-    }
+    if content_type and content_type in _MIME_MAP:
+        mime_type = _MIME_MAP[content_type]
+        if mime_type is FileType.JPEG and extension == "jpg":
+            return FileType.JPG
+        return mime_type
 
-    # 优先使用扩展名
-    if extension in extension_map:
-        return extension_map[extension]
+    if detected_mime and detected_mime in _MIME_MAP:
+        return _MIME_MAP[detected_mime]
 
-    # 其次使用内容类型
-    if content_type and content_type in mime_map:
-        return mime_map[content_type]
+    if header:
+        if header.startswith(b"%PDF"):
+            return FileType.PDF
+        if header.startswith(b"\x89PNG\r\n\x1a\n"):
+            return FileType.PNG
+        if header.startswith(b"\xff\xd8\xff"):
+            return FileType.JPEG
+        if header.startswith((b"II*\x00", b"MM\x00*")):
+            return FileType.TIFF
+        if header.startswith(b"GIF8"):
+            return FileType.GIF
+        if header.startswith(b"BM"):
+            return FileType.BMP
+        if header.startswith(b"RIFF") and header[8:12] == b"WEBP":
+            return FileType.WEBP
 
-    # 最后使用检测到的MIME类型
-    if detected_mime and detected_mime in mime_map:
-        return mime_map[detected_mime]
+    guessed_mime, _ = mimetypes.guess_type(f"dummy.{extension}")
+    if guessed_mime and guessed_mime in _MIME_MAP:
+        return _MIME_MAP[guessed_mime]
 
     return FileType.UNKNOWN
 
 
 def is_file_type_supported(file_type: FileType) -> bool:
-    """检查文件类型是否支持
-
-    Args:
-        file_type: 文件类型
-
-    Returns:
-        bool: 是否支持
-    """
+    """检查文件类型是否支持。"""
     return file_type.value in SUPPORTED_FORMATS
 
 
 async def save_upload_file(file: UploadFile, temp_dir: Path) -> Path:
-    """保存上传的文件到临时位置
-
-    Args:
-        file: 上传的文件
-        temp_dir: 临时目录
-
-    Returns:
-        Path: 保存的文件路径
-    """
-    # 确保临时目录存在
+    """保存上传文件到临时目录。"""
     temp_dir.mkdir(parents=True, exist_ok=True)
 
-    # 生成唯一的文件名
-    import uuid
-    filename = f"{uuid.uuid4()}_{file.filename}"
-    file_path = temp_dir / filename
+    safe_name = file.filename or "upload.bin"
+    file_path = temp_dir / f"{uuid.uuid4()}_{safe_name}"
 
-    # 异步保存文件
     try:
-        # 使用aiofiles进行异步文件操作
         import aiofiles
 
-        async with aiofiles.open(file_path, 'wb') as f:
-            # 分块读取和写入
-            chunk_size = 1024 * 1024  # 1MB
-            while chunk := await file.read(chunk_size):
-                await f.write(chunk)
+        async with aiofiles.open(file_path, "wb") as output:
+            while chunk := await file.read(1024 * 1024):
+                await output.write(chunk)
 
-        logger.debug(f"文件保存成功: {file_path}")
+        file.file.seek(0)
+        logger.debug("文件保存成功", extra={"path": str(file_path)})
         return file_path
-
     except Exception as exc:
-        # 如果保存失败，清理文件
         if file_path.exists():
             file_path.unlink(missing_ok=True)
-
-        logger.error(
-            "文件保存失败",
-            extra={
-                "filename": file.filename,
-                "temp_dir": str(temp_dir),
-                "error": str(exc)
-            }
-        )
         raise FileValidationError(
             f"文件保存失败: {str(exc)}",
-            details={"filename": file.filename}
-        )
+            details={"filename": safe_name},
+        ) from exc
 
 
-def get_file_info(file_path: Path) -> Dict[str, Any]:
-    """获取文件信息
-
-    Args:
-        file_path: 文件路径
-
-    Returns:
-        Dict[str, Any]: 文件信息
-    """
+def get_file_info(file_path: Path) -> dict[str, Any]:
+    """获取文件信息。"""
     stat = file_path.stat()
-
     return {
         "path": str(file_path),
         "size": stat.st_size,
         "created": stat.st_ctime,
         "modified": stat.st_mtime,
         "name": file_path.name,
-        "extension": file_path.suffix.lstrip('.')
+        "extension": file_path.suffix.lstrip("."),
     }

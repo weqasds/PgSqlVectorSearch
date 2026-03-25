@@ -139,6 +139,12 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--tb=short",
+    "-s",
+    "--basetemp=pytest_tmp",
+    "-p",
+    "no:cacheprovider",
+    "-p",
+    "no:tmpdir"
 ]
 asyncio_mode = "auto"
 markers = [
@@ -148,3 +154,5 @@ markers = [
 
 [project.scripts]
 rag-document-parser = "rag_document_parser.__main__:main"
+
+

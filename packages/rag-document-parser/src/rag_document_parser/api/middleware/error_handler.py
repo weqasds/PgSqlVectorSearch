@@ -1,13 +1,17 @@
 """错误处理中间件"""
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.encoders import jsonable_encoder
+
 from rag_document_parser.models.responses import create_error_response
-from rag_document_parser.services.exceptions import DocumentParserError, handle_document_parser_error
+from rag_document_parser.services.exceptions import (
+    DocumentParserError,
+    handle_document_parser_error,
+)
 from rag_document_parser.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -25,7 +29,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
             logger.warning(
                 "文档解析错误",
                 extra={
-                    "request_id": (request.state, "request_id", "unknown"),
+                    "request_id": getattr(request.state, "request_id", "unknown"),
                     "error_code": exc.code,
                     "error_message": exc.message,
                     "url": str(request.url),
@@ -47,8 +51,8 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
             logger.warning(
                 "请求验证错误",
                 extra={
-                    "request_id": (request.state, "request_id", "unknown"),
-                    "errors": exc.errors(),
+                    "request_id": getattr(request.state, "request_id", "unknown"),
+                    "errors": exc.errors()[:10],
                     "url": str(request.url),
                 },
             )
@@ -56,7 +60,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
             error_response = create_error_response(
                 code="VALIDATION_ERROR",
                 message="请求数据验证失败",
-                details={"errors": exc.errors()},
+                details={"errors": exc.errors()[:10]},
                 metadata={"request_id": getattr(request.state, "request_id", "")},
             )
 
@@ -70,7 +74,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
             logger.error(
                 "未处理的异常",
                 extra={
-                    "request_id": (request.state, "request_id", "unknown"),
+                    "request_id": getattr(request.state, "request_id", "unknown"),
                     "url": str(request.url),
                     "method": request.method,
                     "exception_type": type(exc).__name__,
