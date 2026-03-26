@@ -18,7 +18,7 @@ fronted/node_modules/
 fronted/dist/
 fronted/.env
 fronted/.env.local
-
+.dotnet/
 # Database files
 *.db
 *.sqlite3
