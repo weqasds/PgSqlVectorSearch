@@ -27,6 +27,9 @@ public static class InfrastructureSharedServiceCollectionExtensions
         services
             .AddOptions<PythonDocumentParserOptions>()
             .Bind(configuration.GetSection(PythonDocumentParserOptions.SectionName));
+        services
+            .AddOptions<RedisInfrastructureOptions>()
+            .Bind(configuration.GetSection(RedisInfrastructureOptions.SectionName));
 
         services.AddHttpClient<PythonDocumentParserClient>((serviceProvider, client) =>
         {
@@ -39,11 +42,6 @@ public static class InfrastructureSharedServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(Math.Max(5, options.TimeoutSeconds));
         });
 
-        // 注册Redis连接
-        var redisConnectionString = configuration.GetSection("Redis:ConnectionString").Value ?? "localhost:6379";
-        services.AddSingleton<IConnectionMultiplexer>(sp =>
-            ConnectionMultiplexer.Connect(redisConnectionString));
-
         // 1. 注册跨领域服务
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -52,7 +50,7 @@ public static class InfrastructureSharedServiceCollectionExtensions
         // 2. 注册基础设施服务
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<IFileStorageService, FileStorageService>();
-        services.AddScoped<ITaskQueueService, RedisTaskQueueService>(); // 使用Redis实现
+        RegisterTaskQueueServices(services, configuration);
         services.AddScoped<IAuditLogService, AuditLogService>();
 
         // 3. 注册文档解析器
@@ -64,12 +62,50 @@ public static class InfrastructureSharedServiceCollectionExtensions
         services.AddScoped<IDocumentParser, PowerPointDocumentParser>();
         // 注意：同一个接口的多个实现会以集合形式注入，可通过 IEnumerable<IDocumentParser> 获取所有解析器。
         services.AddScoped<IDocumentParserSelector, DocumentParserSelector>();
-        services.AddScoped<RequestTrackingService>();
+        services.AddSingleton<RequestTrackingService>();
         return services;
     }
 
     private static string EnsureTrailingSlash(string baseUrl)
     {
         return baseUrl.EndsWith("/", StringComparison.Ordinal) ? baseUrl : baseUrl + "/";
+    }
+
+    private static void RegisterTaskQueueServices(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var options = new RedisInfrastructureOptions();
+        configuration.GetSection(RedisInfrastructureOptions.SectionName).Bind(options);
+
+        if (!options.Enabled)
+        {
+            services.AddScoped<ITaskQueueService, TaskQueueService>();
+            return;
+        }
+
+        try
+        {
+            var redisOptions = ConfigurationOptions.Parse(options.ConnectionString, true);
+            redisOptions.AbortOnConnectFail = false;
+            redisOptions.ConnectRetry = 1;
+            redisOptions.ConnectTimeout = Math.Max(500, options.ConnectTimeoutMs);
+
+            var multiplexer = ConnectionMultiplexer.Connect(redisOptions);
+            if (!multiplexer.IsConnected)
+            {
+                Console.WriteLine("Redis 已启用但当前不可用，任务队列将回退到内存实现。");
+                services.AddScoped<ITaskQueueService, TaskQueueService>();
+                return;
+            }
+
+            services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+            services.AddScoped<ITaskQueueService, RedisTaskQueueService>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Redis 连接失败，任务队列将回退到内存实现。错误: {ex.Message}");
+            services.AddScoped<ITaskQueueService, TaskQueueService>();
+        }
     }
 }
