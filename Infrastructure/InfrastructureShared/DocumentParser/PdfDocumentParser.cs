@@ -5,8 +5,8 @@ using DomainService.Exceptions;
 namespace Infrastructure.InfrastructureShared.DocumentParser;
 
 /// <summary>
-/// PDF 文档解析器（占位符实现）。
-/// 需要安装 PDF 解析库（如 iText7、PdfPig 或 PDFium）才能实际使用。
+/// 本地 PDF 文档解析器。
+/// 当 Python 外部解析服务未启用时作为回退实现。
 /// </summary>
 public class PdfDocumentParser : DocumentParserBase, IChunkableDocumentParser, IStructuredDocumentParser
 {

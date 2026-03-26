@@ -35,6 +35,11 @@ public class DocumentParseStrategyResolver : IDocumentParseStrategyResolver
                 // Excel表格数据适合结构化解析
                 return DocumentParseMode.Structured;
 
+            case ".pptx":
+            case ".ppt":
+                // 幻灯片天然是结构化内容
+                return DocumentParseMode.Structured;
+
             case ".txt":
             case ".text":
             case ".md":

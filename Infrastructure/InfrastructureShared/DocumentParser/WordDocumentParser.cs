@@ -12,16 +12,14 @@ using DomainService.Exceptions;
 namespace Infrastructure.InfrastructureShared.DocumentParser;
 
 /// <summary>
-/// Word 文档解析器（占位符实现）。
-/// 需要安装 OpenXML SDK 或其他 Word 解析库才能实际使用。
+/// Word OpenXML 文档解析器，仅处理 .docx。
 /// </summary>
 public class WordDocumentParser : DocumentParserBase, IChunkableDocumentParser, IStructuredDocumentParser
 {
     /// <inheritdoc />
     protected internal override IReadOnlySet<string> SupportedExtensions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        ".docx",
-        ".doc"
+        ".docx"
     };
     /// <inheritdoc />
     protected override async Task<ParsedDocument> ParseCoreAsync(

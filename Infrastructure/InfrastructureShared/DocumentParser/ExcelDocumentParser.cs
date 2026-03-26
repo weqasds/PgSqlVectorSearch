@@ -12,8 +12,8 @@ using DomainService.Exceptions;
 namespace Infrastructure.InfrastructureShared.DocumentParser;
 
 /// <summary>
-/// Excel 文档解析器（占位符实现）。
-/// 需要安装 OpenXML SDK 或 EPPlus 等 Excel 解析库才能实际使用。
+/// Excel/OpenXML 文档解析器。
+/// 仅处理 .xlsx 和纯文本表格格式。
 /// </summary>
 public class ExcelDocumentParser : DocumentParserBase, IChunkableDocumentParser, IStructuredDocumentParser
 {
@@ -21,7 +21,6 @@ public class ExcelDocumentParser : DocumentParserBase, IChunkableDocumentParser,
     protected internal override IReadOnlySet<string> SupportedExtensions { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         ".xlsx",
-        ".xls",
         ".csv",
         ".tsv"
     };
