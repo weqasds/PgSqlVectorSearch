@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "7ceeEIGefF0=",
+  "dgSpecHash": "DQ4XGYLm8Zc=",
   "success": true,
-  "projectFilePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+  "projectFilePath": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
   "expectedPackageFiles": [
     "D:\\source\\packages\\azure.ai.openai\\2.8.0-beta.1\\azure.ai.openai.2.8.0-beta.1.nupkg.sha512",
     "D:\\source\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",
@@ -62,10 +62,10 @@
     {
       "code": "NU1903",
       "level": "Warning",
-      "message": "Package 'Newtonsoft.Json' 9.0.1 has a known high severity vulnerability, https://github.com/advisories/GHSA-5crp-9r3c-p9vr",
-      "projectPath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+      "message": "包 \"Newtonsoft.Json\" 9.0.1 具有已知的 高 严重性漏洞，https://github.com/advisories/GHSA-5crp-9r3c-p9vr",
+      "projectPath": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
       "warningLevel": 1,
-      "filePath": "D:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
+      "filePath": "d:\\source\\repos\\PgSqlVectorSearch\\PgSqlVectorSearch\\PgSqlVectorSearch.csproj",
       "libraryId": "Newtonsoft.Json",
       "targetGraphs": [
         "net10.0"

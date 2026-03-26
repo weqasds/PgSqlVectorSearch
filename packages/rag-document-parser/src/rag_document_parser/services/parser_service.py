@@ -27,8 +27,10 @@ from rag_document_parser.services.exceptions import (
     DependencyError,
     DocumentParserError,
     ParsingFailedError,
-    TimeoutError as ParserTimeoutError,
     UnsupportedFormatError,
+)
+from rag_document_parser.services.exceptions import (
+    TimeoutError as ParserTimeoutError,
 )
 from rag_document_parser.utils.logging import get_logger
 
@@ -96,7 +98,7 @@ class ParserService:
         logger.info(f"引擎初始化完成，已注册 {len(self._engines_by_name)} 个引擎")
 
     def _register_engine(self, engine: object) -> None:
-        engine_name = getattr(engine, "name")
+        engine_name = engine.name
         self._engines_by_name[engine_name] = engine
         for extension in self._get_supported_extensions(engine):
             self._engines_by_extension.setdefault(extension, []).append(engine)

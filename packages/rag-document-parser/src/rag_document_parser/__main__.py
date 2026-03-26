@@ -1,5 +1,6 @@
 """RAG Document Parser 命令行入口点"""
 import uvicorn
+
 from rag_document_parser.services.config import settings
 
 

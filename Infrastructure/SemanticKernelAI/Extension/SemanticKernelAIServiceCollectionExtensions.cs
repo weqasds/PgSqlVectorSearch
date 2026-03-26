@@ -26,7 +26,8 @@ public static class SemanticKernelAIServiceCollectionExtensions
         var aiOptions = configuration.GetSection("AIOptions").Get<AIOptions>() ?? new AIOptions();
 
         // 注册AIOptions供其他服务使用
-        services.Configure<AIOptions>(_ => configuration.GetSection("AIOptions"));
+        services.Configure<AIOptions>(options =>
+            configuration.GetSection("AIOptions").Bind(options));
 
         // 注册语义内核服务
         var kernelBuilder = services.AddKernel();
@@ -38,7 +39,6 @@ public static class SemanticKernelAIServiceCollectionExtensions
                 modelId: aiOptions.DeepSeek.Model,
                 endpoint: new Uri(aiOptions.DeepSeek.BaseUrl),
                 apiKey: aiOptions.DeepSeek.ApiKey);
-
         }
 
         if (aiOptions.LocalEmbedding.Enabled)
@@ -79,5 +79,4 @@ public static class SemanticKernelAIServiceCollectionExtensions
 
         return services;
     }
-
 }

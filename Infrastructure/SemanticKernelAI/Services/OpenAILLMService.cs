@@ -14,7 +14,7 @@ public class OpenAILLMService : ILLMService
     private readonly Kernel _kernel;
     private readonly IChatCompletionService _chatCompletionService;
 
-    public OpenAILLMService(Kernel kernel,IChatCompletionService chatCompletionService)
+    public OpenAILLMService(Kernel kernel, IChatCompletionService chatCompletionService)
     {
         _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         _chatCompletionService = chatCompletionService;

@@ -25,6 +25,7 @@ public class RequestTrackingMiddleware
     {
         var stopwatch = Stopwatch.StartNew();
         var startTime = DateTime.UtcNow;
+        _trackingService.RequestStarted();
 
         try
         {
@@ -50,6 +51,10 @@ public class RequestTrackingMiddleware
                 stopwatch.ElapsedMilliseconds,
                 startTime);
             throw;
+        }
+        finally
+        {
+            _trackingService.RequestCompleted();
         }
     }
 }

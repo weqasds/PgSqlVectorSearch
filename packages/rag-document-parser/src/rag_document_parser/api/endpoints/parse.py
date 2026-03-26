@@ -5,10 +5,17 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 
 from rag_document_parser.api.dependencies import RequestId, rate_limit, verify_token
-from rag_document_parser.models.responses import ParseResponse, create_error_response, create_success_response
+from rag_document_parser.models.responses import (
+    ParseResponse,
+    create_error_response,
+    create_success_response,
+)
 from rag_document_parser.models.schemas import ParseRequest, ParseStrategy
 from rag_document_parser.services.config import settings
-from rag_document_parser.services.exceptions import FileValidationError, UnsupportedFormatError
+from rag_document_parser.services.exceptions import (
+    FileValidationError,
+    UnsupportedFormatError,
+)
 from rag_document_parser.services.runtime import get_parser_service
 from rag_document_parser.utils.file_utils import (
     SUPPORTED_FORMATS,
@@ -30,7 +37,7 @@ async def parse_document(
     file: Annotated[UploadFile, File(..., description="要解析的文档文件")],
     strategy: Annotated[ParseStrategy, Form(description="解析策略")] = ParseStrategy.AUTO,
     extract_tables: Annotated[bool, Form(description="是否提取表格")] = True,
-    extract_images: Annotated[bool, Form(description="是否提取图片信息")] = False,
+    extract_images: Annotated[bool, Form(description="是否提取图片信息")] = True,
     ocr_threshold: Annotated[int | None, Form(description="OCR触发阈值")] = None,
     timeout: Annotated[int | None, Form(description="超时时间（秒）")] = None,
 ) -> dict[str, Any]:
