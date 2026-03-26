@@ -28,12 +28,26 @@ public static class InfrastructureSharedServiceCollectionExtensions
             .AddOptions<PythonDocumentParserOptions>()
             .Bind(configuration.GetSection(PythonDocumentParserOptions.SectionName));
         services
+            .AddOptions<MinerUDocumentParserOptions>()
+            .Bind(configuration.GetSection(MinerUDocumentParserOptions.SectionName));
+        services
             .AddOptions<RedisInfrastructureOptions>()
             .Bind(configuration.GetSection(RedisInfrastructureOptions.SectionName));
 
         services.AddHttpClient<PythonDocumentParserClient>((serviceProvider, client) =>
         {
             var options = serviceProvider.GetRequiredService<IOptions<PythonDocumentParserOptions>>().Value;
+            if (!string.IsNullOrWhiteSpace(options.BaseUrl))
+            {
+                client.BaseAddress = new Uri(EnsureTrailingSlash(options.BaseUrl), UriKind.Absolute);
+            }
+
+            client.Timeout = TimeSpan.FromSeconds(Math.Max(5, options.TimeoutSeconds));
+        });
+
+        services.AddHttpClient<MinerUDocumentParserClient>((serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<MinerUDocumentParserOptions>>().Value;
             if (!string.IsNullOrWhiteSpace(options.BaseUrl))
             {
                 client.BaseAddress = new Uri(EnsureTrailingSlash(options.BaseUrl), UriKind.Absolute);
@@ -55,6 +69,7 @@ public static class InfrastructureSharedServiceCollectionExtensions
 
         // 3. 注册文档解析器
         services.AddScoped<IDocumentParser, PlainTextDocumentParser>();
+        services.AddScoped<IDocumentParser, MinerUDocumentParser>();
         services.AddScoped<IDocumentParser, PythonDocumentParser>();
         services.AddScoped<IDocumentParser, PdfDocumentParser>();
         services.AddScoped<IDocumentParser, WordDocumentParser>();
