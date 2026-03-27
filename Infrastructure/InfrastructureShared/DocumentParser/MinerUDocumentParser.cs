@@ -111,7 +111,7 @@ public class MinerUDocumentParser : DocumentParserBase, IChunkableDocumentParser
     }
 
     private static ParsedDocument MapToParsedDocument(
-        MinerUContentList contentList,
+        List<MinerUContentBlock> contentList,
         DocumentParseOptions? options)
     {
         var blocks = BuildBlocks(contentList, options);
@@ -128,7 +128,7 @@ public class MinerUDocumentParser : DocumentParserBase, IChunkableDocumentParser
     }
 
     private static StructuredDocument MapToStructuredDocument(
-        MinerUContentList contentList,
+        List<MinerUContentBlock> contentList,
         DocumentParseOptions? options)
     {
         var nodes = BuildStructuredNodes(contentList, options);
@@ -155,13 +155,13 @@ public class MinerUDocumentParser : DocumentParserBase, IChunkableDocumentParser
     }
 
     private static List<ParsedBlock> BuildBlocks(
-        MinerUContentList contentList,
+        List<MinerUContentBlock> contentList,
         DocumentParseOptions? options)
     {
         var selectedPages = BuildSelectedPageSet(contentList, options);
         var blocks = new List<ParsedBlock>();
 
-        foreach (var block in contentList.ContentList)
+        foreach (var block in contentList)
         {
             if (!selectedPages.Contains(block.PageIdx))
             {
@@ -258,7 +258,7 @@ public class MinerUDocumentParser : DocumentParserBase, IChunkableDocumentParser
         }
 
         // 回退：将所有文本内容作为段落块
-        return contentList.ContentList
+        return contentList
             .OfType<MinerUTextBlock>()
             .Where(textBlock => selectedPages.Contains(textBlock.PageIdx) && !string.IsNullOrWhiteSpace(textBlock.Text))
             .Select(textBlock => new ParsedBlock
@@ -271,13 +271,13 @@ public class MinerUDocumentParser : DocumentParserBase, IChunkableDocumentParser
     }
 
     private static List<DocumentNode> BuildStructuredNodes(
-        MinerUContentList contentList,
+        List<MinerUContentBlock> contentList,
         DocumentParseOptions? options)
     {
         var selectedPages = BuildSelectedPageSet(contentList, options);
         var items = new List<StructuredSequenceItem>();
 
-        foreach (var block in contentList.ContentList)
+        foreach (var block in contentList)
         {
             if (!selectedPages.Contains(block.PageIdx))
             {
@@ -396,10 +396,10 @@ public class MinerUDocumentParser : DocumentParserBase, IChunkableDocumentParser
     }
 
     private static HashSet<int> BuildSelectedPageSet(
-        MinerUContentList contentList,
+        List<MinerUContentBlock> contentList,
         DocumentParseOptions? options)
     {
-        var maxPage = contentList.ContentList.Select(b => b.PageIdx).DefaultIfEmpty(-1).Max();
+        var maxPage = contentList.Select(b => b.PageIdx).DefaultIfEmpty(-1).Max();
         if (maxPage < 0)
         {
             return new HashSet<int>();
@@ -415,18 +415,18 @@ public class MinerUDocumentParser : DocumentParserBase, IChunkableDocumentParser
             .ToHashSet();
     }
 
-    private static Dictionary<string, object> BuildMetadata(MinerUContentList contentList)
+    private static Dictionary<string, object> BuildMetadata(List<MinerUContentBlock> contentList)
     {
         var metadata = new Dictionary<string, object>();
 
-        var textBlocks = contentList.ContentList.OfType<MinerUTextBlock>().ToList();
-        var tableBlocks = contentList.ContentList.OfType<MinerUTableBlock>().ToList();
-        var imageBlocks = contentList.ContentList.OfType<MinerUImageBlock>().ToList();
-        var equationBlocks = contentList.ContentList.OfType<MinerUEquationBlock>().ToList();
-        var codeBlocks = contentList.ContentList.OfType<MinerUCodeBlock>().ToList();
-        var listBlocks = contentList.ContentList.OfType<MinerUListBlock>().ToList();
+        var textBlocks = contentList.OfType<MinerUTextBlock>().ToList();
+        var tableBlocks = contentList.OfType<MinerUTableBlock>().ToList();
+        var imageBlocks = contentList.OfType<MinerUImageBlock>().ToList();
+        var equationBlocks = contentList.OfType<MinerUEquationBlock>().ToList();
+        var codeBlocks = contentList.OfType<MinerUCodeBlock>().ToList();
+        var listBlocks = contentList.OfType<MinerUListBlock>().ToList();
 
-        metadata["TotalBlocks"] = contentList.ContentList.Count;
+        metadata["TotalBlocks"] = contentList.Count;
         metadata["TextBlocks"] = textBlocks.Count;
         metadata["TableBlocks"] = tableBlocks.Count;
         metadata["ImageBlocks"] = imageBlocks.Count;
@@ -434,7 +434,7 @@ public class MinerUDocumentParser : DocumentParserBase, IChunkableDocumentParser
         metadata["CodeBlocks"] = codeBlocks.Count;
         metadata["ListBlocks"] = listBlocks.Count;
 
-        var pageCount = contentList.ContentList.Select(b => b.PageIdx).DefaultIfEmpty(-1).Max() + 1;
+        var pageCount = contentList.Select(b => b.PageIdx).DefaultIfEmpty(-1).Max() + 1;
         if (pageCount > 0)
         {
             metadata["PageCount"] = pageCount;

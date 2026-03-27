@@ -1,6 +1,41 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Infrastructure.InfrastructureShared.DocumentParser;
+
+#region 通用 API 响应模型
+
+/// <summary>
+/// MinerU API 通用响应包装器。
+/// </summary>
+public sealed class MinerUApiResponse<T>
+{
+    /// <summary>
+    /// 响应代码：0 表示成功，非 0 表示错误。
+    /// </summary>
+    [JsonPropertyName("code")]
+    public int Code { get; set; }
+
+    /// <summary>
+    /// 响应消息。
+    /// </summary>
+    [JsonPropertyName("msg")]
+    public string Msg { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 追踪 ID。
+    /// </summary>
+    [JsonPropertyName("trace_id")]
+    public string TraceId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 响应数据。
+    /// </summary>
+    [JsonPropertyName("data")]
+    public T? Data { get; set; }
+}
+
+#endregion
 
 #region 批量文件上传 API 模型
 
@@ -35,33 +70,9 @@ public sealed class MinerUBatchFileRequest
 }
 
 /// <summary>
-/// 批量文件上传响应中的文件 URL 项。
+/// 批量文件上传响应数据。
 /// </summary>
-public sealed class MinerUFileUrlItem
-{
-    /// <summary>
-    /// 文件名称。
-    /// </summary>
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// 预签名的上传 URL。
-    /// </summary>
-    [JsonPropertyName("url")]
-    public string Url { get; set; } = string.Empty;
-
-    /// <summary>
-    /// 用户自定义数据 ID。
-    /// </summary>
-    [JsonPropertyName("data_id")]
-    public string? DataId { get; set; }
-}
-
-/// <summary>
-/// 批量文件上传响应。
-/// </summary>
-public sealed class MinerUBatchFileResponse
+public sealed class MinerUBatchFileResponseData
 {
     /// <summary>
     /// 批次 ID。
@@ -70,10 +81,10 @@ public sealed class MinerUBatchFileResponse
     public string BatchId { get; set; } = string.Empty;
 
     /// <summary>
-    /// 文件 URL 列表。
+    /// 预签名的上传 URL 列表（字符串数组）。
     /// </summary>
     [JsonPropertyName("file_urls")]
-    public List<MinerUFileUrlItem> FileUrls { get; set; } = new();
+    public List<string> FileUrls { get; set; } = new();
 }
 
 #endregion
@@ -129,9 +140,9 @@ public sealed class MinerUExtractResultItem
 }
 
 /// <summary>
-/// 批量提取结果响应。
+/// 批量提取结果响应数据。
 /// </summary>
-public sealed class MinerUExtractResultBatchResponse
+public sealed class MinerUExtractResultBatchResponseData
 {
     /// <summary>
     /// 批次 ID。
@@ -183,12 +194,20 @@ public sealed class MinerUBoundingBox
 /// <summary>
 /// 内容块基类。
 /// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+[JsonDerivedType(typeof(MinerUTextBlock), typeDiscriminator: "text")]
+[JsonDerivedType(typeof(MinerUImageBlock), typeDiscriminator: "image")]
+[JsonDerivedType(typeof(MinerUTableBlock), typeDiscriminator: "table")]
+[JsonDerivedType(typeof(MinerUEquationBlock), typeDiscriminator: "equation")]
+[JsonDerivedType(typeof(MinerUCodeBlock), typeDiscriminator: "code")]
+[JsonDerivedType(typeof(MinerUListBlock), typeDiscriminator: "list")]
+[JsonDerivedType(typeof(MinerUDiscardedBlock), typeDiscriminator: "discarded")]
 public abstract class MinerUContentBlock
 {
     /// <summary>
     /// 块类型："text"、"image"、"table"、"equation"、"code"、"list" 等。
     /// </summary>
-    [JsonPropertyName("type")]
+    [JsonIgnore]
     public string Type { get; set; } = string.Empty;
 
     /// <summary>
@@ -354,16 +373,66 @@ public sealed class MinerUDiscardedBlock : MinerUContentBlock
     public string Text { get; set; } = string.Empty;
 }
 
+
+#endregion
+
+#region JSON 转换器
+
 /// <summary>
-/// content_list.json 根对象。
+/// 将边界框数组 [x0, y0, x1, y1] 转换为 MinerUBoundingBox 对象的 JSON 转换器。
+/// 支持数组格式和对象格式。
 /// </summary>
-public sealed class MinerUContentList
+public sealed class MinerUBoundingBoxConverter : JsonConverter<MinerUBoundingBox>
 {
-    /// <summary>
-    /// 内容块列表（按阅读顺序）。
-    /// </summary>
-    [JsonPropertyName("content_list")]
-    public List<MinerUContentBlock> ContentList { get; set; } = new();
+    public override MinerUBoundingBox Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.StartArray)
+        {
+            // 数组格式: [x0, y0, x1, y1]
+            var array = JsonSerializer.Deserialize<double[]>(ref reader, options)
+                ?? throw new JsonException("无法解析边界框数组。");
+
+            if (array.Length != 4)
+            {
+                throw new JsonException($"边界框数组必须包含 4 个元素，实际有 {array.Length} 个。");
+            }
+
+            return new MinerUBoundingBox
+            {
+                X0 = array[0],
+                Y0 = array[1],
+                X1 = array[2],
+                Y1 = array[3]
+            };
+        }
+        else if (reader.TokenType == JsonTokenType.StartObject)
+        {
+            // 对象格式: { "x0": ..., "y0": ..., "x1": ..., "y1": ... }
+            return JsonSerializer.Deserialize<MinerUBoundingBox>(ref reader, options)
+                ?? throw new JsonException("无法解析边界框对象。");
+        }
+        else
+        {
+            throw new JsonException($"无法解析边界框，期待数组或对象，实际是 {reader.TokenType}。");
+        }
+    }
+
+    public override void Write(
+        Utf8JsonWriter writer,
+        MinerUBoundingBox value,
+        JsonSerializerOptions options)
+    {
+        // 序列化为数组格式以保持与 MinerU 输出的兼容性
+        writer.WriteStartArray();
+        writer.WriteNumberValue(value.X0);
+        writer.WriteNumberValue(value.Y0);
+        writer.WriteNumberValue(value.X1);
+        writer.WriteNumberValue(value.Y1);
+        writer.WriteEndArray();
+    }
 }
 
 #endregion

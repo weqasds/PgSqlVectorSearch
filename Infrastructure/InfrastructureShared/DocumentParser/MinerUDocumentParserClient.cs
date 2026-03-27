@@ -16,7 +16,8 @@ public sealed class MinerUDocumentParserClient
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Converters = { new MinerUBoundingBoxConverter() }
     };
 
     private readonly HttpClient _httpClient;
@@ -46,7 +47,7 @@ public sealed class MinerUDocumentParserClient
     /// <param name="parseOptions">解析选项。</param>
     /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>解析后的内容列表。</returns>
-    public async Task<MinerUContentList> ParseAsync(
+    public async Task<List<MinerUContentBlock>> ParseAsync(
         Stream stream,
         string fileName,
         DocumentParseOptions? parseOptions,
@@ -61,7 +62,7 @@ public sealed class MinerUDocumentParserClient
         var batchResponse = await RequestUploadUrlAsync(fileName, cancellationToken).ConfigureAwait(false);
 
         // 2. 上传文件
-        var fileUrl = batchResponse.FileUrls.FirstOrDefault()?.Url
+        var fileUrl = batchResponse.FileUrls.FirstOrDefault()
             ?? throw new InvalidOperationException("未获取到文件上传 URL。");
         await UploadFileAsync(stream, fileUrl, cancellationToken).ConfigureAwait(false);
 
@@ -72,7 +73,7 @@ public sealed class MinerUDocumentParserClient
         return await ExtractContentListFromZipAsync(zipStream, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<MinerUBatchFileResponse> RequestUploadUrlAsync(
+    private async Task<MinerUBatchFileResponseData> RequestUploadUrlAsync(
         string fileName,
         CancellationToken cancellationToken)
     {
@@ -108,10 +109,20 @@ public sealed class MinerUDocumentParserClient
         await EnsureSuccessStatusCodeAsync(response, cancellationToken).ConfigureAwait(false);
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        var batchResponse = JsonSerializer.Deserialize<MinerUBatchFileResponse>(content, JsonOptions)
+        var apiResponse = JsonSerializer.Deserialize<MinerUApiResponse<MinerUBatchFileResponseData>>(content, JsonOptions)
             ?? throw new InvalidOperationException("无法解析批量文件上传响应。");
 
-        return batchResponse;
+        if (apiResponse.Code != 0)
+        {
+            throw new InvalidOperationException($"MinerU API 返回错误: {apiResponse.Msg} (代码: {apiResponse.Code})");
+        }
+
+        if (apiResponse.Data is null)
+        {
+            throw new InvalidOperationException("MinerU API 返回数据为空。");
+        }
+
+        return apiResponse.Data;
     }
 
     private static async Task UploadFileAsync(
@@ -124,21 +135,31 @@ public sealed class MinerUDocumentParserClient
             stream.Position = 0;
         }
 
-        using var request = new HttpRequestMessage(HttpMethod.Put, uploadUrl)
-        {
-            Content = new StreamContent(new NonDisposingStream(stream))
-        };
-        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        // 创建新的 HttpClient，避免任何全局配置添加额外的 headers
+        using var httpClient = new HttpClient();
+        // 清除所有默认请求头，防止干扰 OSS 签名
+        httpClient.DefaultRequestHeaders.Clear();
 
-        using var response = await new HttpClient().SendAsync(
-            request,
-            HttpCompletionOption.ResponseHeadersRead,
+        // 使用 StreamContent 包装流，但不设置 Content-Type
+        using var content = new StreamContent(new NonDisposingStream(stream));
+
+        // 可选：如果流支持 Seek，设置正确的 Content-Length
+        // 阿里云 OSS 预签名 URL 有时对 Content-Length 敏感
+        if (stream.CanSeek)
+        {
+            content.Headers.ContentLength = stream.Length;
+        }
+
+        using var response = await httpClient.PutAsync(
+            uploadUrl,
+            content,
             cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             throw new InvalidOperationException(
-                $"文件上传失败，HTTP {(int)response.StatusCode}: {await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)}");
+                $"文件上传失败，HTTP {(int)response.StatusCode}: {errorBody}");
         }
     }
 
@@ -161,10 +182,20 @@ public sealed class MinerUDocumentParserClient
             await EnsureSuccessStatusCodeAsync(response, cancellationToken).ConfigureAwait(false);
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-            var result = JsonSerializer.Deserialize<MinerUExtractResultBatchResponse>(content, JsonOptions)
+            var apiResponse = JsonSerializer.Deserialize<MinerUApiResponse<MinerUExtractResultBatchResponseData>>(content, JsonOptions)
                 ?? throw new InvalidOperationException("无法解析批量提取结果响应。");
 
-            var item = result.ExtractResult.FirstOrDefault()
+            if (apiResponse.Code != 0)
+            {
+                throw new InvalidOperationException($"MinerU API 返回错误: {apiResponse.Msg} (代码: {apiResponse.Code})");
+            }
+
+            if (apiResponse.Data is null)
+            {
+                throw new InvalidOperationException("MinerU API 返回数据为空。");
+            }
+
+            var item = apiResponse.Data.ExtractResult.FirstOrDefault()
                 ?? throw new InvalidOperationException("提取结果为空。");
 
             switch (item.State)
@@ -182,7 +213,8 @@ public sealed class MinerUDocumentParserClient
                 case "running":
                     // 继续轮询
                     break;
-
+                case "waiting-file":
+                    break;
                 default:
                     throw new InvalidOperationException($"未知任务状态: {item.State}");
             }
@@ -216,7 +248,7 @@ public sealed class MinerUDocumentParserClient
         return memoryStream;
     }
 
-    private static async Task<MinerUContentList> ExtractContentListFromZipAsync(
+    private static async Task<List<MinerUContentBlock>> ExtractContentListFromZipAsync(
         Stream zipStream,
         CancellationToken cancellationToken)
     {
@@ -230,10 +262,41 @@ public sealed class MinerUDocumentParserClient
         using var reader = new StreamReader(entryStream, Encoding.UTF8);
         var json = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
 
-        var contentList = JsonSerializer.Deserialize<MinerUContentList>(json, JsonOptions)
-            ?? throw new InvalidOperationException("无法解析 content_list.json。");
+        try
+        {
+            // 直接反序列化为 List<MinerUContentBlock>
+            var blocks = JsonSerializer.Deserialize<List<MinerUContentBlock>>(json, JsonOptions)
+                ?? throw new InvalidOperationException("无法解析 content_list.json：反序列化结果为 null。");
+            return blocks;
+        }
+        catch (JsonException ex)
+        {
+            // 向后兼容：尝试解析为对象格式 { "content_list": [...] }
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
 
-        return contentList;
+                if (root.TryGetProperty("content_list", out var contentListElement))
+                {
+                    var blocks = JsonSerializer.Deserialize<List<MinerUContentBlock>>(
+                        contentListElement.GetRawText(), JsonOptions)
+                        ?? throw new InvalidOperationException("无法解析 content_list.json：对象格式反序列化结果为 null。");
+                    return blocks;
+                }
+                else
+                {
+                    // 如果没有 content_list 属性，尝试将整个对象当作数组
+                    var blocks = JsonSerializer.Deserialize<List<MinerUContentBlock>>(json, JsonOptions)
+                        ?? throw new InvalidOperationException("无法解析 content_list.json：对象格式反序列化结果为 null。");
+                    return blocks;
+                }
+            }
+            catch (JsonException)
+            {
+                throw new InvalidOperationException($"无法解析 content_list.json：{ex.Message}");
+            }
+        }
     }
 
     private void AddAuthorizationHeader(HttpRequestMessage request)
